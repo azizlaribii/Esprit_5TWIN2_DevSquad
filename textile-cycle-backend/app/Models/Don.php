@@ -15,4 +15,14 @@ class Don extends Model
         'quantite_kg',
         'statut',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function association()
+    {
+        return $this->belongsTo(Association::class);
+    }
 }
