@@ -37,3 +37,4 @@ Route::post('/marketplace/{article}/evaluer',     [MarketplaceController::class,
 Route::resource('marketplace', MarketplaceController::class)->parameters([
     'marketplace' => 'article'
 ]);
+require __DIR__.'/don.php';
