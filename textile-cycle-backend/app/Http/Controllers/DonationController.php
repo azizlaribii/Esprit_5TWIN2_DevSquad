@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\AnalyzeDonation;
+use App\Models\Association;
 use App\Models\Donation;
 use App\Models\DonationMatch;
 use App\Services\Geocoder;
@@ -30,7 +31,8 @@ class DonationController extends Controller
 
     public function create(): View
     {
-        return view('don.donations.create');
+        $associations = Association::orderBy('nom')->get();
+        return view('don.donations.create', compact('associations'));
     }
 
     public function store(Request $request, Geocoder $geocoder): RedirectResponse
@@ -70,8 +72,8 @@ class DonationController extends Controller
 
         AnalyzeDonation::dispatch($donation);
 
-        return redirect()->route('donations.show', $donation)
-            ->with('status', 'Merci ! Nous cherchons les associations les plus adaptées à votre don.');
+        return redirect()->route('dons.index')
+            ->with('success', '🎁 Merci ! Votre don a bien été enregistré. Nous cherchons les associations les plus adaptées.');
     }
 
     public function show(Donation $donation): View

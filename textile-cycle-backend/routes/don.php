@@ -30,7 +30,7 @@ if (! Route::has('login')) {
         Route::get('/register', [WebAuthController::class, 'showRegisterForm'])->name('register');
         Route::post('/register', [WebAuthController::class, 'register'])->name('register.post');
     });
-    Route::post('/logout', [WebAuthController::class, 'logout'])->middleware('auth')->name('logout');
+    Route::match(['get', 'post'], '/logout', [WebAuthController::class, 'logout'])->name('logout');
 }
 
 Route::prefix('don-intelligent')->group(function () {
@@ -48,13 +48,15 @@ Route::prefix('don-intelligent')->group(function () {
             };
         })->name('don.home');
 
-        // ---- Particulier -------------------------------------------------------
+        // ---- Formulaire de don (accessible à tout utilisateur authentifié) ----
+        Route::get('/dons/nouveau', [DonationController::class, 'create'])->name('donations.create');
+        Route::post('/dons', [DonationController::class, 'store'])
+            ->middleware('throttle:20,1')
+            ->name('donations.store');
+
+        // ---- Particulier (gestion de ses propres dons) ----------------------
         Route::middleware('role:user')->group(function () {
             Route::get('/dons', [DonationController::class, 'index'])->name('donations.index');
-            Route::get('/dons/nouveau', [DonationController::class, 'create'])->name('donations.create');
-            Route::post('/dons', [DonationController::class, 'store'])
-                ->middleware('throttle:20,1')
-                ->name('donations.store');
             Route::get('/dons/{donation}', [DonationController::class, 'show'])->name('donations.show');
             Route::get('/dons/{donation}/modifier', [DonationController::class, 'edit'])->name('donations.edit');
             Route::put('/dons/{donation}', [DonationController::class, 'update'])->name('donations.update');

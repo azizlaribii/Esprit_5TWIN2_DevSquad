@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Depot;
 use App\Models\Reparation;
 use App\Models\Don;
+use App\Models\Donation;
 use App\Models\Transformation;
 use App\Models\Atelier;
 use App\Models\Association;
@@ -117,12 +118,20 @@ class DashboardViewController extends Controller
     }
 
     /**
-     * Page Dons
+     * Page Dons — mélange les anciens Dons (table dons) et les nouveaux
+     * Donations intelligents (table donations), triés par date décroissante.
      */
     public function dons()
     {
-        $dons = Don::with('user', 'association')->latest()->paginate(10);
-        return view('pages.dons', compact('dons'));
+        // Anciens dons (table dons)
+        $dons = Don::with('user', 'association')->latest()->paginate(15);
+
+        // Nouveaux dons intelligents (table donations) — tous les utilisateurs
+        $donations = Donation::with('user', 'matches.association')
+            ->latest()
+            ->paginate(15);
+
+        return view('pages.dons', compact('dons', 'donations'));
     }
 
     /**

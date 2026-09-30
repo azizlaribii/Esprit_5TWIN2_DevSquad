@@ -61,29 +61,43 @@ class MatchingService
             ? $donation->matches()->where('status', DonationMatch::REJECTED)->pluck('association_id')->all()
             : [];
 
-        return $this->candidates()
+        $ranked = $this->candidates()
             ->reject(fn (Association $a) => in_array($a->id, $excluded, true))
             ->map(fn (Association $a) => $this->score($donation, $a))
             ->filter()
             ->sortByDesc(fn (MatchResult $r) => $r->score)
             ->take($limit)
             ->values();
+
+        // Repli : si aucune association n'est dans le rayon strict (ex: donateur en région),
+        // on propose les meilleures associations nationales pour ne jamais bloquer le donateur.
+        if ($ranked->isEmpty()) {
+            $ranked = $this->candidates()
+                ->reject(fn (Association $a) => in_array($a->id, $excluded, true))
+                ->map(fn (Association $a) => $this->score($donation, $a, ignoreMaxDistance: true))
+                ->filter()
+                ->sortByDesc(fn (MatchResult $r) => $r->score)
+                ->take($limit)
+                ->values();
+        }
+
+        return $ranked;
     }
 
     /**
      * Score d'une association pour un don, ou null si elle est éliminée.
      * Ne fait aucune requête si les relations/compteurs sont déjà chargés.
      */
-    public function score(Donation $donation, Association $association): ?MatchResult
+    public function score(Donation $donation, Association $association, bool $ignoreMaxDistance = false): ?MatchResult
     {
         if (! $this->isEligible($donation, $association)) {
             return null;
         }
 
-        $maxKm    = max(1.0, (float) config('textilecycle.max_distance_km', 50));
+        $maxKm    = max(1.0, (float) config('textilecycle.max_distance_km', 100));
         $distance = $this->distanceKm($donation, $association);
 
-        if ($distance !== null && $distance > $maxKm) {
+        if (! $ignoreMaxDistance && $distance !== null && $distance > $maxKm) {
             return null;
         }
 

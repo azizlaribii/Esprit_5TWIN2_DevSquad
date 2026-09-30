@@ -7,6 +7,14 @@
 @section('content')
 <div class="animate-fade-in-up">
 
+    {{-- Flash Message --}}
+    @if(session('success'))
+        <div class="alert alert-success" style="margin-bottom:1.5rem">
+            <span class="material-icons-round" style="font-size:1.1rem">check_circle</span>
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
         <div>
             <h1 class="page-title">Associations Solidaires</h1>
@@ -15,6 +23,9 @@
         <div style="display:flex;gap:.75rem">
             <a href="{{ route('dons.index') }}" class="btn btn-primary">
                 <span class="material-icons-round">volunteer_activism</span> Voir les Dons
+            </a>
+            <a href="{{ route('donations.create') }}" class="btn btn-secondary">
+                <span class="material-icons-round">add_circle</span> Faire un don
             </a>
         </div>
     </div>
@@ -28,26 +39,44 @@
                             <span class="material-icons-round" style="font-size:1.5rem">groups</span>
                         </div>
                         <span class="badge badge-success" style="font-size:.8rem">
-                            {{ $assoc->beneficiaires_aides }} personnes aidées
+                            {{ $assoc->beneficiaires_aides ?? 0 }} personnes aidées
                         </span>
                     </div>
 
-                    <h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin-bottom:.35rem">{{ $assoc->nom }}</h3>
+                    <h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin-bottom:.35rem">
+                        {{ $assoc->nom }}
+                    </h3>
 
-                    <p style="font-size:.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:.35rem;margin-top:.75rem">
-                        <span class="material-icons-round" style="font-size:1rem;color:var(--text-muted)">location_on</span>
-                        {{ $assoc->adresse }}
-                    </p>
+                    @if($assoc->description)
+                        <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.5rem;line-height:1.5">
+                            {{ Str::limit($assoc->description, 120) }}
+                        </p>
+                    @endif
+
+                    @if($assoc->adresse || $assoc->city)
+                        <p style="font-size:.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:.35rem;margin-top:.75rem">
+                            <span class="material-icons-round" style="font-size:1rem;color:var(--text-muted)">location_on</span>
+                            {{ $assoc->adresse ?: $assoc->city }}
+                        </p>
+                    @endif
+
+                    @if($assoc->phone)
+                        <p style="font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:.35rem;margin-top:.35rem">
+                            <span class="material-icons-round" style="font-size:.95rem">phone</span>
+                            {{ $assoc->phone }}
+                        </p>
+                    @endif
                 </div>
 
                 <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
                     <span style="font-size:.8rem;color:var(--text-muted)">Partenaire officiel</span>
-                    <a href="{{ route('marketplace.create') }}" class="btn btn-secondary btn-sm">Donner un vêtement</a>
+                    <a href="{{ route('donations.create') }}" class="btn btn-secondary btn-sm">Donner un vêtement</a>
                 </div>
             </div>
         @empty
             <div class="card" style="grid-column:1/-1;text-align:center;padding:3rem">
-                <p style="color:var(--text-muted)">Aucune association enregistrée.</p>
+                <span class="material-icons-round" style="font-size:3rem;color:var(--text-muted);display:block;margin-bottom:1rem">groups</span>
+                <p style="color:var(--text-muted)">Aucune association enregistrée pour le moment.</p>
             </div>
         @endforelse
     </div>

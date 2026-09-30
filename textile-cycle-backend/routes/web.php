@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\DashboardViewController;
+use App\Http\Controllers\AssociationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,7 @@ Route::get('/dons',          [DashboardViewController::class, 'dons'])->name('do
 // ── Partenaires
 Route::get('/ateliers',      [DashboardViewController::class, 'ateliers'])->name('ateliers.index');
 Route::get('/associations',  [DashboardViewController::class, 'associations'])->name('associations.index');
+Route::post('/associations', [AssociationController::class, 'store'])->name('associations.store');
 
 // ── Marketplace Circulaire (CRUD + Favoris + Demandes + Évaluations)
 Route::get('/marketplace/mes-favoris',           [MarketplaceController::class, 'mesFavoris'])->name('marketplace.favoris');
