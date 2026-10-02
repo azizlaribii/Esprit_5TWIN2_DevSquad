@@ -56,3 +56,6 @@ build/
 
 # Misc
 .phpactor.json
+
+/storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
