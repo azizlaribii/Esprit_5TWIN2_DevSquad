@@ -109,13 +109,16 @@ class DashboardViewController extends Controller
     }
 
     /**
-     * Page Réparations
+     * Page Réparations — Suivi unifié des réparations classiques et analyses IA intelligentes
      */
     public function reparations()
     {
         $reparations = Reparation::with('user', 'atelier')->latest()->paginate(10);
-        return view('pages.reparations', compact('reparations'));
+        $repairRequests = \App\Models\RepairRequest::with('workshop', 'user')->latest()->paginate(10);
+
+        return view('pages.reparations', compact('reparations', 'repairRequests'));
     }
+
 
     /**
      * Page Dons — mélange les anciens Dons (table dons) et les nouveaux

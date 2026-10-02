@@ -25,7 +25,7 @@
                 <div style="font-size:.85rem;font-weight:700;color:var(--text-primary)">{{ Str::limit($reco->titre, 28) }}</div>
                 <div style="font-size:.78rem;color:var(--text-muted)">{{ $reco->taille }} • {{ $reco->categorie }}</div>
                 <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--primary-light);margin-top:.35rem">
-                    @if($reco->type == 'don') Gratuit @elseif($reco->type == 'echange') Échange @else {{ number_format($reco->prix, 2) }} € @endif
+                    @if($reco->type == 'don') Gratuit @elseif($reco->type == 'echange') Échange @else {{ number_format($reco->prix, 2) }} DT @endif
                 </div>
             </div>
         </div>

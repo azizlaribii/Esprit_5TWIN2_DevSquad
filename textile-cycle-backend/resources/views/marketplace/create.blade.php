@@ -161,13 +161,13 @@
                         <span class="ai-badge" style="margin-left:auto;font-size:.65rem">IA</span>
                     </div>
                     <div id="ai-estimate-display" style="margin-bottom:.75rem">
-                        <div class="price-estimate" id="ai-price">25 – 45 €</div>
+                        <div class="price-estimate" id="ai-price">25 – 45 DT</div>
                         <div style="font-size:.8rem;color:var(--text-muted)">Prix indicatif basé sur le type, l'état et la marque</div>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
-                        <span class="ai-chip" onclick="applyAiPrice(35)">Appliquer 35 €</span>
-                        <span class="ai-chip" onclick="applyAiPrice(45)">Appliquer 45 €</span>
-                        <span class="ai-chip" onclick="applyAiPrice(25)">Prix bas 25 €</span>
+                        <span class="ai-chip" onclick="applyAiPrice(35)">Appliquer 35 DT</span>
+                        <span class="ai-chip" onclick="applyAiPrice(45)">Appliquer 45 DT</span>
+                        <span class="ai-chip" onclick="applyAiPrice(25)">Prix bas 25 DT</span>
                     </div>
                     <div style="font-size:.75rem;color:var(--text-muted)">
                         Facteurs analysés : catégorie, marque, état, ancienneté, demande actuelle
@@ -183,9 +183,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="prix">Prix (€)</label>
+                        <label class="form-label" for="prix">Prix (DT)</label>
                         <div style="position:relative">
-                            <span style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:700">€</span>
+                            <span style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:700">DT</span>
                             <input type="number" name="prix" id="prix" class="form-control {{ $errors->has('prix') ? 'is-invalid' : '' }}"
                                    value="{{ old('prix', $article->prix ?? '') }}" min="0" step="0.01" placeholder="0.00" style="padding-left:2rem">
                         </div>
@@ -251,8 +251,8 @@ function selectType(val) {
 }
 function estimatePrice() {
     const etat = document.getElementById('etat').value;
-    const prices = {'Neuf avec étiquette':'40 – 80 €','Très bon état':'20 – 45 €','Bon état':'10 – 25 €','État correct':'5 – 15 €'};
-    document.getElementById('ai-price').textContent = prices[etat] || '15 – 35 €';
+    const prices = {'Neuf avec étiquette':'40 – 80 DT','Très bon état':'20 – 45 DT','Bon état':'10 – 25 DT','État correct':'5 – 15 DT'};
+    document.getElementById('ai-price').textContent = prices[etat] || '15 – 35 DT';
 }
 function applyAiPrice(p) { document.getElementById('prix').value = p; }
 togglePriceField();

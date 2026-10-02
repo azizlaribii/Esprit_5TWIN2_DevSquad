@@ -114,14 +114,14 @@
                 <input type="hidden" name="q" value="{{ request('q') }}">
 
                 <div class="filter-group">
-                    <div class="filter-label">Prix (€)</div>
+                    <div class="filter-label">Prix (DT)</div>
                     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;font-size:.8rem;color:var(--text-secondary)">
-                        <span id="price-min-label">{{ request('prix_min', 0) }}€</span>
+                        <span id="price-min-label">{{ request('prix_min', 0) }}DT</span>
                         <span>—</span>
-                        <span id="price-max-label">{{ request('prix_max', 500) }}€</span>
+                        <span id="price-max-label">{{ request('prix_max', 500) }}DT</span>
                     </div>
-                    <input type="range" name="prix_min" class="range-input" min="0" max="500" value="{{ request('prix_min', 0) }}" id="range-min" oninput="document.getElementById('price-min-label').textContent=this.value+'€'">
-                    <input type="range" name="prix_max" class="range-input" min="0" max="500" value="{{ request('prix_max', 500) }}" id="range-max" oninput="document.getElementById('price-max-label').textContent=this.value+'€'">
+                    <input type="range" name="prix_min" class="range-input" min="0" max="500" value="{{ request('prix_min', 0) }}" id="range-min" oninput="document.getElementById('price-min-label').textContent=this.value+'DT'">
+                    <input type="range" name="prix_max" class="range-input" min="0" max="500" value="{{ request('prix_max', 500) }}" id="range-max" oninput="document.getElementById('price-max-label').textContent=this.value+'DT'">
                 </div>
 
                 <div class="filter-group">
@@ -225,7 +225,7 @@
                                     <div class="product-price {{ $article->type == 'don' ? 'free' : ($article->type == 'echange' ? 'exchange' : '') }}">
                                         @if($article->type == 'don') Gratuit
                                         @elseif($article->type == 'echange') Échange
-                                        @else {{ number_format($article->prix, 2) }} €
+                                        @else {{ number_format($article->prix, 2) }} DT
                                         @endif
                                     </div>
                                     <form method="POST" action="{{ route('marketplace.toggle-favori', $article) }}" style="display:inline">

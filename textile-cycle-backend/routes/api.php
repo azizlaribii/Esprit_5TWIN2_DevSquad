@@ -56,3 +56,19 @@ Route::prefix('predictions')->group(function () {
     Route::get('/categories-populaires', [PredictionController::class, 'categoriesPopulaires']);
     Route::get('/rapport-complet', [PredictionController::class, 'rapportComplet']);
 });
+
+// ==================== RÉPARATIONS & ATELIERS (IA & CRUD) ====================
+Route::get('/repairs', [\App\Http\Controllers\Api\RepairController::class, 'index']);
+Route::post('/repairs', [\App\Http\Controllers\Api\RepairController::class, 'store']);
+Route::get('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'show']);
+Route::delete('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'destroy']);
+
+Route::post('/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'store']);
+Route::get('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'show']);
+Route::put('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'update']);
+Route::delete('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'destroy']);
+
+Route::get('/repairs/{repairRequest}/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'forRepair']);
+Route::post('/repairs/{repairRequest}/workshop', [\App\Http\Controllers\Api\WorkshopController::class, 'choose']);
+Route::post('/reparations/{repairRequest}/ateliers/choisir', [\App\Http\Controllers\Api\WorkshopController::class, 'choose']);
+

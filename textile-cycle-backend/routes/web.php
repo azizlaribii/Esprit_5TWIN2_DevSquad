@@ -40,3 +40,4 @@ Route::resource('marketplace', MarketplaceController::class)->parameters([
     'marketplace' => 'article'
 ]);
 require __DIR__.'/don.php';
+require __DIR__.'/reparation.php';

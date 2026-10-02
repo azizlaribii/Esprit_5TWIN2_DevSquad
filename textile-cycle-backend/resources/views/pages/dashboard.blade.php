@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Tableau de bord intelligent')
 @section('meta_description', 'Tableau de bord et indicateurs de performance de la plateforme circulaire TexTileCycle')
@@ -115,7 +115,7 @@
                                 {{ $art->taille }} • {{ $art->categorie }}
                             </div>
                             <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--primary-light);margin-top:.5rem">
-                                {{ $art->type === 'don' ? 'Gratuit' : ($art->prix ? number_format($art->prix, 2) . ' €' : 'Échange') }}
+                                {{ $art->type === 'don' ? 'Gratuit' : ($art->prix ? number_format($art->prix, 2) . ' DT' : 'Échange') }}
                             </div>
                         </div>
                     @empty

@@ -57,7 +57,7 @@
                     </div>
                     <div style="background:rgba(255,255,255,.03);border-radius:var(--radius-md);padding:.875rem">
                         <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.35rem">Prix estimé par l'IA</div>
-                        <div style="font-weight:700;color:var(--secondary)">{{ $article->ai_prix_min ?? 20 }} – {{ $article->ai_prix_max ?? 40 }} €</div>
+                        <div style="font-weight:700;color:var(--secondary)">{{ $article->ai_prix_min ?? 20 }} – {{ $article->ai_prix_max ?? 40 }} DT</div>
                     </div>
                     <div style="background:rgba(255,255,255,.03);border-radius:var(--radius-md);padding:.875rem">
                         <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.35rem">Annonces similaires</div>
@@ -101,7 +101,7 @@
                                 <div style="font-size:.78rem;color:var(--text-muted)">{{ $sim->taille }} • {{ $sim->etat }}</div>
                             </div>
                             <div style="font-family:'Outfit',sans-serif;font-weight:800;color:var(--primary-light);font-size:.9rem;flex-shrink:0">
-                                {{ $sim->type == 'don' ? 'Gratuit' : ($sim->type == 'echange' ? 'Échange' : number_format($sim->prix, 2).' €') }}
+                                {{ $sim->type == 'don' ? 'Gratuit' : ($sim->type == 'echange' ? 'Échange' : number_format($sim->prix, 2).' DT') }}
                             </div>
                         </a>
                     @endforeach
@@ -126,7 +126,7 @@
                     <div style="font-family:'Outfit',sans-serif;font-size:2.5rem;font-weight:800;{{ $article->type == 'don' ? 'color:var(--secondary)' : ($article->type == 'echange' ? 'color:var(--accent-orange)' : 'background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent') }}">
                         @if($article->type == 'don') Gratuit
                         @elseif($article->type == 'echange') Échange
-                        @else {{ number_format($article->prix, 2) }} €
+                        @else {{ number_format($article->prix, 2) }} DT
                         @endif
                     </div>
                     @if($article->type == 'echange' && $article->article_echange)

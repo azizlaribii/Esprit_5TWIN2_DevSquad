@@ -34,7 +34,7 @@
                         <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem">{{ $f->article->taille }} • {{ $f->article->categorie }}</div>
                         <div style="display:flex;align-items:center;justify-content:space-between">
                             <span style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.2rem;color:var(--primary-light)">
-                                {{ $f->article->type == 'don' ? 'Gratuit' : ($f->article->type == 'echange' ? 'Échange' : number_format($f->article->prix,2).' €') }}
+                                {{ $f->article->type == 'don' ? 'Gratuit' : ($f->article->type == 'echange' ? 'Échange' : number_format($f->article->prix,2).' DT') }}
                             </span>
                             <a href="{{ route('marketplace.show', $f->article) }}" class="btn btn-secondary btn-sm">Voir</a>
                         </div>

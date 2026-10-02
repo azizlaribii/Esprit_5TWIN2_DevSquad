@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="@yield('meta_description', 'TexTileCycle – Plateforme de mode circulaire')">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'TexTileCycle') | Marketplace Circulaire</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -105,6 +106,7 @@
         @media(max-width:768px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.main-content{margin-left:0}.sidebar{display:none}}
     </style>
     @yield('styles')
+    @stack('styles')
 </head>
 <body>
 <div class="app-shell">
@@ -117,6 +119,8 @@
         </div>
     </div>
 </div>
+@include('partials.workshop-modal')
 @yield('scripts')
+@stack('scripts')
 </body>
 </html>
