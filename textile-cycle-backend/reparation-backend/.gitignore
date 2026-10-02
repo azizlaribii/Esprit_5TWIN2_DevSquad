@@ -1,0 +1,61 @@
+# Laravel
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public/*
+!storage/app/public/.gitkeep
+/storage/framework/views/*
+!storage/framework/views/.gitkeep
+/storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+/bootstrap/cache/*.php
+.env
+.env.backup
+.env.*.local
+
+# Compiled assets
+/public/build
+/public/css/app.css
+/public/js/app.js
+
+# Testing
+/coverage
+.phpunit.result.cache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# SQLite (on garde uniquement la version SQLite de dev si besoin)
+/database/database.sqlite
+
+# Python AI service
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.pkl
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Misc
+.phpactor.json
+
+/storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
