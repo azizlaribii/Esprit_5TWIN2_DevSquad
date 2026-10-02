@@ -31,7 +31,8 @@ Route::get('/associations',  [DashboardViewController::class, 'associations'])->
 Route::post('/associations', [AssociationController::class, 'store'])->name('associations.store');
 
 // ── Marketplace Circulaire (CRUD + Favoris + Demandes + Évaluations)
-Route::get('/marketplace/mes-favoris',           [MarketplaceController::class, 'mesFavoris'])->name('marketplace.favoris');
+Route::get('/marketplace/mes-articles',           [MarketplaceController::class, 'mesArticles'])->name('marketplace.mes-articles');
+Route::get('/marketplace/mes-favoris',            [MarketplaceController::class, 'mesFavoris'])->name('marketplace.favoris');
 Route::post('/marketplace/{article}/favori',      [MarketplaceController::class, 'toggleFavori'])->name('marketplace.toggle-favori');
 Route::post('/marketplace/{article}/demande',     [MarketplaceController::class, 'demandeAchat'])->name('marketplace.demande');
 Route::post('/marketplace/{article}/evaluer',     [MarketplaceController::class, 'evaluerVendeur'])->name('marketplace.evaluer');

@@ -7,13 +7,6 @@
 @section('content')
 <div class="animate-fade-in-up">
 
-    {{-- Flash Message --}}
-    @if(session('success'))
-        <div class="alert alert-success" style="margin-bottom:1.5rem">
-            <span class="material-icons-round" style="font-size:1.1rem">check_circle</span>
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
         <div>

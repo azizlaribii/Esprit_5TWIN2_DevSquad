@@ -1,7 +1,7 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', isset($article) ? 'Modifier l\'article' : 'Publier un article')
-@section('meta_description', 'Publiez un vêtement à vendre, échanger ou donner sur TexTileCycle')
+@section('meta_description', 'Modifiez votre vêtement à vendre ou échanger sur TexTileCycle')
 @section('breadcrumb', 'Marketplace › ' . (isset($article) ? 'Modifier' : 'Publier'))
 
 @section('styles')
@@ -21,7 +21,7 @@
 @section('content')
 <div class="animate-fade-in-up">
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
-        <a href="{{ route('marketplace.index') }}" class="btn btn-secondary btn-sm">
+        <a href="{{ route('marketplace.mes-articles') }}" class="btn btn-secondary btn-sm">
             <span class="material-icons-round" style="font-size:1rem">arrow_back</span> Retour
         </a>
         <div>
@@ -30,6 +30,7 @@
         </div>
     </div>
 
+    {{-- ═══ MAIN EDIT FORM (PUT only) ═══ --}}
     <form method="POST"
           action="{{ isset($article) ? route('marketplace.update', $article) : route('marketplace.store') }}"
           enctype="multipart/form-data"
@@ -136,8 +137,8 @@
 
                     <div class="form-group">
                         <label class="form-label" for="type">Type de transaction *</label>
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
-                            @foreach(['vente' => ['💰','Vente','primary'], 'echange' => ['🔄','Échange','warning'], 'don' => ['❤️','Don','success']] as $val => $info)
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem">
+                            @foreach(['vente' => ['💰','Vente','primary'], 'echange' => ['🔄','Échange','warning']] as $val => $info)
                                 <label style="cursor:pointer">
                                     <input type="radio" name="type" value="{{ $val }}" {{ old('type', $article->type ?? 'vente') == $val ? 'checked' : '' }} style="display:none" onchange="togglePriceField()">
                                     <div class="type-option badge-{{ $info[2] }}" style="padding:.75rem;border-radius:var(--radius-md);text-align:center;border:2px solid transparent;transition:var(--transition);cursor:pointer" onclick="selectType('{{ $val }}')">
@@ -198,22 +199,27 @@
                     </div>
                 </div>
 
-                {{-- Publier --}}
+                {{-- Actions --}}
                 <div class="card">
                     <div style="display:flex;flex-direction:column;gap:.75rem">
+                        {{-- ✅ Submit button (inside the main form) --}}
                         <button type="submit" class="btn btn-primary" id="btn-submit" style="width:100%;justify-content:center;padding:.875rem">
                             <span class="material-icons-round">{{ isset($article) ? 'save' : 'publish' }}</span>
                             {{ isset($article) ? 'Enregistrer les modifications' : 'Publier l\'annonce' }}
                         </button>
+
+                        {{-- 🗑️ Delete button (triggers modal, NOT inside this form) --}}
                         @if(isset($article))
-                            <form method="POST" action="{{ route('marketplace.destroy', $article) }}" onsubmit="return confirm('Supprimer définitivement cet article ?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center" id="btn-delete">
-                                    <span class="material-icons-round">delete</span> Supprimer l'annonce
-                                </button>
-                            </form>
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    style="width:100%;justify-content:center"
+                                    id="btn-delete"
+                                    onclick="openDeleteModal({{ $article->id }}, '{{ addslashes($article->titre) }}')">
+                                <span class="material-icons-round">delete</span> Supprimer l'annonce
+                            </button>
                         @endif
-                        <a href="{{ route('marketplace.index') }}" class="btn btn-secondary" style="width:100%;justify-content:center">
+
+                        <a href="{{ route('marketplace.mes-articles') }}" class="btn btn-secondary" style="width:100%;justify-content:center">
                             Annuler
                         </a>
                     </div>
@@ -225,8 +231,52 @@
             </div>
         </div>
     </form>
+    {{-- ═══ END MAIN FORM ═══ --}}
+
 </div>
+
+{{-- ═══ DELETE MODAL (outside all forms) ═══ --}}
+@if(isset($article))
+<style>
+.del-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:2000;display:none;align-items:center;justify-content:center;animation:fadeIn .2s ease}
+.del-modal-overlay.open{display:flex}
+.del-modal-box{background:var(--bg-card);border:1px solid rgba(255,101,132,.4);border-radius:var(--radius-lg);padding:2.5rem 2rem;max-width:440px;width:92%;animation:fadeInUp .25s ease forwards;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.6)}
+.del-modal-icon{width:72px;height:72px;border-radius:50%;background:rgba(255,101,132,.12);border:2px solid rgba(255,101,132,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+.del-modal-icon .material-icons-round{font-size:2.25rem;color:var(--accent-red)}
+.del-modal-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text-primary);margin-bottom:.5rem}
+.del-modal-text{color:var(--text-secondary);font-size:.9rem;line-height:1.6;margin-bottom:1.75rem}
+.del-modal-article{display:inline-block;background:rgba(255,101,132,.08);border:1px solid rgba(255,101,132,.2);border-radius:var(--radius-sm);padding:.35rem .875rem;font-size:.85rem;font-weight:600;color:var(--accent-red);margin-bottom:1.25rem}
+.del-modal-actions{display:flex;gap:.75rem;justify-content:center}
+</style>
+<div class="del-modal-overlay" id="del-modal" role="dialog" aria-modal="true">
+    <div class="del-modal-box">
+        <div class="del-modal-icon">
+            <span class="material-icons-round">warning_amber</span>
+        </div>
+        <div class="del-modal-title">Supprimer cette annonce ?</div>
+        <div class="del-modal-article" id="del-modal-name">{{ $article->titre }}</div>
+        <div class="del-modal-text">
+            Cette action est <strong style="color:var(--accent-red)">irréversible</strong>.<br>
+            L'annonce et toutes ses données seront définitivement supprimées.
+        </div>
+        <div class="del-modal-actions">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-del" onclick="closeDeleteModal()" style="min-width:120px">
+                <span class="material-icons-round" style="font-size:1rem">close</span> Annuler
+            </button>
+            {{-- ✅ Standalone delete form — completely outside the edit form --}}
+            <form method="POST" action="{{ route('marketplace.destroy', $article) }}" id="del-form" style="display:inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger" id="btn-confirm-del" style="min-width:140px">
+                    <span class="material-icons-round" style="font-size:1rem">delete_forever</span> Oui, supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
+
 
 @section('scripts')
 <script>
@@ -243,7 +293,7 @@ function previewImage(input) {
 function togglePriceField() {
     const type = document.querySelector('input[name="type"]:checked')?.value;
     const section = document.getElementById('price-section');
-    if (section) section.style.opacity = type === 'don' ? '0.4' : '1';
+    if (section) section.style.opacity = type === 'echange' ? '0.6' : '1';
 }
 function selectType(val) {
     document.querySelectorAll('input[name="type"]').forEach(r => r.checked = (r.value === val));
@@ -256,5 +306,25 @@ function estimatePrice() {
 }
 function applyAiPrice(p) { document.getElementById('prix').value = p; }
 togglePriceField();
+
+function openDeleteModal() {
+    const modal = document.getElementById('del-modal');
+    if (modal) modal.classList.add('open');
+}
+function closeDeleteModal() {
+    const modal = document.getElementById('del-modal');
+    if (modal) modal.classList.remove('open');
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteModal();
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('del-modal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    }
+});
 </script>
 @endsection

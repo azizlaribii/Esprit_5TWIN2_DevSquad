@@ -489,6 +489,21 @@ function fillDemo(email, pwd) {
     document.getElementById('email').value = email;
     document.getElementById('password').value = pwd;
 }
+
+// Auto-dismiss alerts after 6.5s
+document.querySelectorAll('.alert').forEach(function(alertEl) {
+    setTimeout(function() {
+        alertEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, margin 0.4s ease';
+        alertEl.style.opacity = '0';
+        alertEl.style.transform = 'translateY(-10px)';
+        alertEl.style.maxHeight = '0';
+        alertEl.style.marginBottom = '0';
+        alertEl.style.paddingTop = '0';
+        alertEl.style.paddingBottom = '0';
+        alertEl.style.overflow = 'hidden';
+        setTimeout(function() { if (alertEl.parentNode) alertEl.parentNode.removeChild(alertEl); }, 450);
+    }, 6500);
+});
 </script>
 
 </body>

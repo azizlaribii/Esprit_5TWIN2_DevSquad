@@ -20,10 +20,21 @@ return new class extends Migration
             $table->json('specialties')->nullable(); // ["Couture", "Fermeture", "Cuir"]
             $table->timestamps();
         });
+
+        if (Schema::hasTable('repair_requests')) {
+            Schema::table('repair_requests', function (Blueprint $table) {
+                $table->foreign('workshop_id')->references('id')->on('workshops')->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
+        if (Schema::hasTable('repair_requests')) {
+            Schema::table('repair_requests', function (Blueprint $table) {
+                $table->dropForeign(['workshop_id']);
+            });
+        }
         Schema::dropIfExists('workshops');
     }
 };

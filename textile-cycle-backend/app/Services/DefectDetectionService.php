@@ -289,11 +289,14 @@ class DefectDetectionService
             $type = $label;
             $cost = self::COST_TABLE[$type] ?? self::COST_TABLE['Usure'];
 
-            // Vraie localisation par Gemini (au lieu de l'ancienne analyse de pixels,
-            // qui plaçait le cadre sur la zone la plus "différente" de l'image).
-            $localisation = $this->localizeWithGemini($photo, $type);
-            $bbox = $localisation['bbox'] ?? null;
-            $location = $localisation['location'] ?? 'Zone visible';
+            $bbox = $data['bbox'] ?? null;
+            $location = $data['location'] ?? null;
+
+            if (! $bbox || ! $location) {
+                $localisation = $this->localizeWithGemini($photo, $type);
+                $bbox = $bbox ?? ($localisation['bbox'] ?? null);
+                $location = $location ?? ($localisation['location'] ?? 'Zone visible');
+            }
 
             return [
                 'verdict'            => 'defaut',

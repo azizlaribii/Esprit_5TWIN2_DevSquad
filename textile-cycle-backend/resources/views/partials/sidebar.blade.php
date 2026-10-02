@@ -1,4 +1,4 @@
-﻿{{-- Partial: sidebar --}}
+{{-- Partial: sidebar --}}
 <aside class="sidebar">
     <div class="sidebar-logo">
         <div class="logo-icon">
@@ -15,10 +15,14 @@
             <span class="nav-icon material-icons-round">dashboard</span>
             <span class="nav-label">Tableau de bord</span>
         </a>
-        <a href="/marketplace" class="nav-item {{ request()->is('marketplace*') ? 'active' : '' }}">
+        <a href="/marketplace" class="nav-item {{ request()->is('marketplace') ? 'active' : '' }}">
             <span class="nav-icon material-icons-round">storefront</span>
             <span class="nav-label">Marketplace</span>
             <span class="nav-badge" style="background:#43D9AD">Nouveau</span>
+        </a>
+        <a href="/marketplace/mes-articles" class="nav-item {{ request()->is('marketplace/mes-articles*') ? 'active' : '' }}">
+            <span class="nav-icon material-icons-round">inventory_2</span>
+            <span class="nav-label">Mes Articles</span>
         </a>
         <a href="/statistiques" class="nav-item {{ request()->is('statistiques*') ? 'active' : '' }}">
             <span class="nav-icon material-icons-round">bar_chart</span>

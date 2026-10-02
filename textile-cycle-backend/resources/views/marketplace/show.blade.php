@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', $article->titre)
 @section('meta_description', Str::limit($article->description, 155))
@@ -19,10 +19,18 @@
 
 @section('content')
 <div class="animate-fade-in-up">
-    <div style="margin-bottom:1rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
         <a href="{{ route('marketplace.index') }}" class="btn btn-secondary btn-sm">
             <span class="material-icons-round" style="font-size:1rem">arrow_back</span> Retour au marketplace
         </a>
+        <div style="display:flex;gap:.5rem">
+            <a href="{{ route('marketplace.edit', $article) }}" class="btn btn-secondary btn-sm" id="btn-edit-article">
+                <span class="material-icons-round" style="font-size:1rem">edit</span> Modifier cet article
+            </a>
+            <a href="{{ route('marketplace.mes-articles') }}" class="btn btn-secondary btn-sm">
+                <span class="material-icons-round" style="font-size:1rem">inventory_2</span> Mes Articles
+            </a>
+        </div>
     </div>
 
     <div class="detail-grid">
@@ -101,7 +109,7 @@
                                 <div style="font-size:.78rem;color:var(--text-muted)">{{ $sim->taille }} • {{ $sim->etat }}</div>
                             </div>
                             <div style="font-family:'Outfit',sans-serif;font-weight:800;color:var(--primary-light);font-size:.9rem;flex-shrink:0">
-                                {{ $sim->type == 'don' ? 'Gratuit' : ($sim->type == 'echange' ? 'Échange' : number_format($sim->prix, 2).' DT') }}
+                                {{ $sim->type == 'echange' ? 'Échange' : number_format($sim->prix ?? 15, 2).' DT' }}
                             </div>
                         </a>
                     @endforeach
@@ -116,17 +124,16 @@
                 {{-- Price + Type --}}
                 <div style="margin-bottom:1.25rem">
                     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
-                        <span class="badge {{ $article->type == 'vente' ? 'badge-primary' : ($article->type == 'echange' ? 'badge-warning' : 'badge-success') }}">
-                            {{ $article->type == 'vente' ? '💰 Vente' : ($article->type == 'echange' ? '🔄 Échange' : '❤️ Don') }}
+                        <span class="badge {{ $article->type == 'vente' ? 'badge-primary' : 'badge-warning' }}">
+                            {{ $article->type == 'vente' ? '💰 Vente' : '🔄 Échange' }}
                         </span>
                         <span class="badge {{ str_contains($article->etat, 'Neuf') || str_contains($article->etat, 'Très') ? 'badge-success' : 'badge-info' }}">
                             {{ $article->etat }}
                         </span>
                     </div>
-                    <div style="font-family:'Outfit',sans-serif;font-size:2.5rem;font-weight:800;{{ $article->type == 'don' ? 'color:var(--secondary)' : ($article->type == 'echange' ? 'color:var(--accent-orange)' : 'background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent') }}">
-                        @if($article->type == 'don') Gratuit
-                        @elseif($article->type == 'echange') Échange
-                        @else {{ number_format($article->prix, 2) }} DT
+                    <div style="font-family:'Outfit',sans-serif;font-size:2.5rem;font-weight:800;{{ $article->type == 'echange' ? 'color:var(--accent-orange)' : 'background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent' }}">
+                        @if($article->type == 'echange') Échange
+                        @else {{ number_format($article->prix ?? 15, 2) }} DT
                         @endif
                     </div>
                     @if($article->type == 'echange' && $article->article_echange)
@@ -158,8 +165,8 @@
                     <form method="POST" action="{{ route('marketplace.demande', $article) }}" style="margin-bottom:.75rem">
                         @csrf
                         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.875rem" id="btn-buy-request">
-                            <span class="material-icons-round">{{ $article->type == 'don' ? 'volunteer_activism' : ($article->type == 'echange' ? 'swap_horiz' : 'shopping_cart') }}</span>
-                            {{ $article->type == 'don' ? 'Demander ce don' : ($article->type == 'echange' ? 'Proposer un échange' : 'Faire une demande d\'achat') }}
+                            <span class="material-icons-round">{{ $article->type == 'echange' ? 'swap_horiz' : 'shopping_cart' }}</span>
+                            {{ $article->type == 'echange' ? 'Proposer un échange' : 'Faire une demande d\'achat' }}
                         </button>
                     </form>
                 @else

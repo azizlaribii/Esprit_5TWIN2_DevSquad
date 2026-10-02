@@ -39,32 +39,73 @@ class MarketplaceController extends Controller
             ->where('statut', 'disponible');
 
         // ── Recherche textuelle
-        if ($search = $request->q) {
+        if ($search = trim($request->q ?? '')) {
             $query->where(function($q) use ($search) {
                 $q->where('titre', 'LIKE', "%{$search}%")
                   ->orWhere('description', 'LIKE', "%{$search}%")
-                  ->orWhere('marque', 'LIKE', "%{$search}%");
+                  ->orWhere('marque', 'LIKE', "%{$search}%")
+                  ->orWhere('categorie', 'LIKE', "%{$search}%");
             });
         }
 
-        // ── Filtres
-        if ($request->categorie) $query->where('categorie', $request->categorie);
-        if ($request->type)      $query->where('type', $request->type);
-        if ($request->taille)    $query->where('taille', $request->taille);
-        if ($request->filled('prix_min')) $query->where('prix', '>=', $request->prix_min);
-        if ($request->filled('prix_max')) $query->where('prix', '<=', $request->prix_max);
-        if ($request->etat)      $query->whereIn('etat', (array) $request->etat);
-        if ($request->genre)     $query->whereIn('genre', (array) $request->genre);
+        // ── Filtre Catégorie
+        if ($request->filled('categorie')) {
+            $cat = trim($request->categorie);
+            $query->where(function($q) use ($cat) {
+                $q->where('categorie', $cat)
+                  ->orWhere('categorie', 'LIKE', "%{$cat}%");
+            });
+        }
+
+        // ── Filtre Type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // ── Filtre Taille
+        if ($request->filled('taille')) {
+            $query->where('taille', $request->taille);
+        }
+
+        // ── Filtre Prix Min & Max
+        if ($request->filled('prix_min') && (float)$request->prix_min > 0) {
+            $query->where('prix', '>=', (float)$request->prix_min);
+        }
+        if ($request->filled('prix_max') && (float)$request->prix_max < 500) {
+            $query->where('prix', '<=', (float)$request->prix_max);
+        }
+
+        // ── Filtre État (supporte les libellés exacts et les slugs)
+        if ($request->filled('etat')) {
+            $etats = (array) $request->etat;
+            $slugMap = [
+                'neuf'     => 'Neuf avec étiquette',
+                'tres_bon' => 'Très bon état',
+                'bon'      => 'Bon état',
+                'correct'  => 'État correct',
+            ];
+            $mappedEtats = [];
+            foreach ($etats as $e) {
+                $mappedEtats[] = $e;
+                if (isset($slugMap[$e])) $mappedEtats[] = $slugMap[$e];
+            }
+            $query->whereIn('etat', array_unique($mappedEtats));
+        }
+
+        // ── Filtre Genre
+        if ($request->filled('genre')) {
+            $query->whereIn('genre', (array) $request->genre);
+        }
 
         // ── Tri
         match($request->tri ?? 'recent') {
-            'prix_asc'  => $query->orderBy('prix', 'asc'),
+            'prix_asc'  => $query->orderByRaw('prix IS NULL, prix ASC'),
             'prix_desc' => $query->orderBy('prix', 'desc'),
             'ai_score'  => $query->orderBy('ai_score', 'desc'),
             default     => $query->latest(),
         };
 
-        $articles = $query->paginate(12);
+        $articles = $query->paginate(12)->withQueryString();
 
         // ── IA Recommandations personnalisées
         $recommendations = $this->getAiRecommendations();
@@ -94,7 +135,7 @@ class MarketplaceController extends Controller
             'taille'         => 'required|string|max:10',
             'genre'          => 'required|in:Homme,Femme,Enfant,Unisexe',
             'etat'           => 'required|string',
-            'type'           => 'required|in:vente,echange,don',
+            'type'           => 'required|in:vente,echange',
             'prix'           => 'nullable|numeric|min:0|max:9999',
             'article_echange'=> 'nullable|string|max:150',
             'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -140,7 +181,7 @@ class MarketplaceController extends Controller
             'genre'            => $validated['genre'],
             'etat'             => $validated['etat'],
             'type'             => $validated['type'],
-            'prix'             => $validated['type'] !== 'don' ? ($validated['prix'] ?? null) : null,
+            'prix'             => $validated['type'] === 'vente' ? ($validated['prix'] ?? null) : null,
             'article_echange'  => $validated['article_echange'] ?? null,
             'image_url'        => $imageUrl,
             'statut'           => 'disponible',
@@ -151,8 +192,8 @@ class MarketplaceController extends Controller
         ]);
 
         return redirect()
-            ->route('marketplace.show', $article)
-            ->with('success', '✅ Votre article a été publié sur la marketplace !');
+            ->route('marketplace.mes-articles')
+            ->with('success', '✅ Votre article a été publié sur la marketplace ! Retrouvez-le dans votre liste ci-dessous.');
     }
 
     // ══════════════════════════════════════════════════════
@@ -198,7 +239,7 @@ class MarketplaceController extends Controller
             'taille'         => 'required|string|max:10',
             'genre'          => 'required|in:Homme,Femme,Enfant,Unisexe',
             'etat'           => 'required|string',
-            'type'           => 'required|in:vente,echange,don',
+            'type'           => 'required|in:vente,echange',
             'prix'           => 'nullable|numeric|min:0|max:9999',
             'article_echange'=> 'nullable|string|max:150',
             'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -214,12 +255,12 @@ class MarketplaceController extends Controller
         $prixEstime = ArticleMarketplace::estimerPrixIA($validated['categorie'], $validated['etat'], $validated['marque'] ?? null);
         $validated['ai_prix_min'] = $prixEstime['min'];
         $validated['ai_prix_max'] = $prixEstime['max'];
-        if ($validated['type'] === 'don') $validated['prix'] = null;
+        if ($validated['type'] !== 'vente') $validated['prix'] = null;
 
         $article->update($validated);
 
         return redirect()
-            ->route('marketplace.show', $article)
+            ->route('marketplace.mes-articles')
             ->with('success', '✅ Votre annonce a été mise à jour.');
     }
 
@@ -237,8 +278,8 @@ class MarketplaceController extends Controller
         $article->delete();
 
         return redirect()
-            ->route('marketplace.index')
-            ->with('success', '🗑️ Votre annonce a été supprimée.');
+            ->route('marketplace.mes-articles')
+            ->with('success', '🗑️ Votre annonce a été supprimée avec succès.');
     }
 
     // ══════════════════════════════════════════════════════
@@ -331,6 +372,43 @@ class MarketplaceController extends Controller
             ->get();
 
         return view('marketplace.favoris', compact('favoris'));
+    }
+
+    // ══════════════════════════════════════════════════════
+    // MES ARTICLES – Table de gestion de l'utilisateur
+    // ══════════════════════════════════════════════════════
+    public function mesArticles(Request $request)
+    {
+        $userId = Auth::id() ?? 1;
+
+        // Convert any legacy 'don' articles to 'vente'
+        ArticleMarketplace::where('type', 'don')->update([
+            'type' => 'vente',
+            'prix' => \Illuminate\Support\Facades\DB::raw('COALESCE(prix, ai_prix_min, 15.00)')
+        ]);
+
+        $query = ArticleMarketplace::where('user_id', $userId)->latest();
+
+        // Filtre statut
+        if ($request->statut) {
+            $query->where('statut', $request->statut);
+        }
+
+        // Filtre type
+        if ($request->type) {
+            $query->where('type', $request->type);
+        }
+
+        $articles = $query->paginate(15);
+
+        $stats = [
+            'total'      => ArticleMarketplace::where('user_id', $userId)->count(),
+            'disponible' => ArticleMarketplace::where('user_id', $userId)->where('statut', 'disponible')->count(),
+            'vendu'      => ArticleMarketplace::where('user_id', $userId)->where('statut', 'vendu')->count(),
+            'en_cours'   => ArticleMarketplace::where('user_id', $userId)->where('statut', 'en_cours')->count(),
+        ];
+
+        return view('marketplace.mes-articles', compact('articles', 'stats'));
     }
 
     // ══════════════════════════════════════════════════════

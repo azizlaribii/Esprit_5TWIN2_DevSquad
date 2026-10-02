@@ -1,7 +1,7 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Marketplace Circulaire')
-@section('meta_description', 'Achetez, échangez ou donnez des vêtements récupérés et réparés sur TexTileCycle Marketplace')
+@section('meta_description', 'Achetez ou échangez des vêtements récupérés et réparés sur TexTileCycle Marketplace')
 @section('breadcrumb', 'Marketplace')
 
 @section('styles')
@@ -56,11 +56,14 @@
         <div>
             <h1 class="page-title">Marketplace Circulaire</h1>
             <p class="page-subtitle">
-                Vente, échange et don de vêtements récupérés & réparés
+                Vente et échange de vêtements récupérés & réparés
                 <span class="ai-badge" style="margin-left:.5rem">IA Recommandations</span>
             </p>
         </div>
         <div style="display:flex;gap:.75rem;align-items:center">
+            <a href="{{ route('marketplace.mes-articles') }}" class="btn btn-secondary">
+                <span class="material-icons-round">inventory_2</span> Mes Articles
+            </a>
             <a href="{{ route('marketplace.favoris') }}" class="btn btn-secondary">
                 <span class="material-icons-round">favorite</span> Mes Favoris
             </a>
@@ -73,83 +76,96 @@
     {{-- ═══ AI RECOMMENDATIONS ═══ --}}
     @include('partials.marketplace.ai-recommendations', ['recommendations' => $recommendations ?? []])
 
-    {{-- ═══ SEARCH BAR ═══ --}}
-    <div class="search-bar section">
-        <div class="search-input-wrap">
-            <span class="material-icons-round">search</span>
-            <form method="GET" action="{{ route('marketplace.index') }}" id="search-form">
-                <input type="text" name="q" value="{{ request('q') }}" class="form-control" id="search-input" placeholder="Rechercher jean, veste, robe…" oninput="this.form.submit()">
-        </div>
-        <select name="categorie" class="form-control" style="width:160px" onchange="this.form.submit()" id="filter-categorie">
-            <option value="">Toutes catégories</option>
-            @foreach(['T-Shirts', 'Jeans', 'Vestes', 'Robes', 'Manteaux', 'Chaussures', 'Accessoires'] as $cat)
-                <option value="{{ $cat }}" {{ request('categorie') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
-            @endforeach
-        </select>
-        <select name="type" class="form-control" style="width:140px" onchange="this.form.submit()" id="filter-type">
-            <option value="">Tout type</option>
-            <option value="vente" {{ request('type') == 'vente' ? 'selected' : '' }}>Vente 💰</option>
-            <option value="echange" {{ request('type') == 'echange' ? 'selected' : '' }}>Échange 🔄</option>
-            <option value="don" {{ request('type') == 'don' ? 'selected' : '' }}>Don ❤️</option>
-        </select>
-        <select name="taille" class="form-control" style="width:120px" onchange="this.form.submit()" id="filter-taille">
-            <option value="">Taille</option>
-            @foreach(['XS','S','M','L','XL','XXL','36','38','40','42','44','46'] as $t)
-                <option value="{{ $t }}" {{ request('taille') == $t ? 'selected' : '' }}>{{ $t }}</option>
-            @endforeach
-        </select>
-        </form>
-    </div>
+    {{-- ═══ UNIFIED SEARCH & FILTER FORM ═══ --}}
+    <form method="GET" action="{{ route('marketplace.index') }}" id="marketplace-filter-form">
 
-    {{-- ═══ MAIN LAYOUT ═══ --}}
-    <div class="market-grid">
-
-        {{-- ─── FILTER PANEL ─── --}}
-        <aside class="filter-panel" id="filter-panel">
-            <div class="filter-title">
-                <span class="material-icons-round" style="font-size:1.1rem;color:var(--primary)">tune</span>
-                Filtres avancés
+        {{-- ─── SEARCH BAR ═══ --}}
+        <div class="search-bar section">
+            <div class="search-input-wrap">
+                <span class="material-icons-round">search</span>
+                <input type="text" name="q" value="{{ request('q') }}" class="form-control" id="search-input" placeholder="Rechercher par titre, marque, description…">
             </div>
-            <form method="GET" action="{{ route('marketplace.index') }}" id="filter-form">
-                <input type="hidden" name="q" value="{{ request('q') }}">
 
-                <div class="filter-group">
-                    <div class="filter-label">Prix (DT)</div>
-                    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;font-size:.8rem;color:var(--text-secondary)">
-                        <span id="price-min-label">{{ request('prix_min', 0) }}DT</span>
-                        <span>—</span>
-                        <span id="price-max-label">{{ request('prix_max', 500) }}DT</span>
-                    </div>
-                    <input type="range" name="prix_min" class="range-input" min="0" max="500" value="{{ request('prix_min', 0) }}" id="range-min" oninput="document.getElementById('price-min-label').textContent=this.value+'DT'">
-                    <input type="range" name="prix_max" class="range-input" min="0" max="500" value="{{ request('prix_max', 500) }}" id="range-max" oninput="document.getElementById('price-max-label').textContent=this.value+'DT'">
+            <select name="categorie" class="form-control" style="width:190px" onchange="this.form.submit()" id="filter-categorie">
+                <option value="">Toutes catégories</option>
+                @foreach(['T-Shirts & Tops', 'Jeans & Pantalons', 'Vestes & Manteaux', 'Robes & Jupes', 'Chaussures', 'Accessoires', 'Sportswear', 'Lingerie'] as $cat)
+                    <option value="{{ $cat }}" {{ request('categorie') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                @endforeach
+            </select>
+
+            <select name="type" class="form-control" style="width:140px" onchange="this.form.submit()" id="filter-type">
+                <option value="">Tout type</option>
+                <option value="vente" {{ request('type') == 'vente' ? 'selected' : '' }}>Vente 💰</option>
+                <option value="echange" {{ request('type') == 'echange' ? 'selected' : '' }}>Échange 🔄</option>
+            </select>
+
+            <select name="taille" class="form-control" style="width:120px" onchange="this.form.submit()" id="filter-taille">
+                <option value="">Taille</option>
+                @foreach(['XS','S','M','L','XL','XXL','36','38','40','42','44','46'] as $t)
+                    <option value="{{ $t }}" {{ request('taille') == $t ? 'selected' : '' }}>{{ $t }}</option>
+                @endforeach
+            </select>
+
+            <button type="submit" class="btn btn-primary" id="btn-search-submit" style="display:flex;align-items:center;gap:.35rem">
+                <span class="material-icons-round" style="font-size:1.1rem">search</span> Filtrer
+            </button>
+
+            @if(request()->hasAny(['q','categorie','type','taille','prix_min','prix_max','etat','genre','tri']))
+                <a href="{{ route('marketplace.index') }}" class="btn btn-secondary" style="display:flex;align-items:center;gap:.35rem" title="Réinitialiser tous les filtres">
+                    <span class="material-icons-round" style="font-size:1.1rem">close</span> Effacer
+                </a>
+            @endif
+        </div>
+
+        {{-- ═══ MAIN LAYOUT ═══ --}}
+        <div class="market-grid">
+
+            {{-- ─── FILTER PANEL (SIDEBAR) ─── --}}
+            <aside class="filter-panel" id="filter-panel">
+                <div class="filter-title">
+                    <span class="material-icons-round" style="font-size:1.1rem;color:var(--primary)">tune</span>
+                    Filtres avancés
                 </div>
 
+                {{-- Price Filter --}}
                 <div class="filter-group">
-                    <div class="filter-label">État</div>
-                    @foreach(['Neuf avec étiquette' => 'neuf', 'Très bon état' => 'tres_bon', 'Bon état' => 'bon', 'État correct' => 'correct'] as $label => $val)
+                    <div class="filter-label">Prix maximum (DT)</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;font-size:.85rem;color:var(--text-secondary)">
+                        <span>0 DT</span>
+                        <strong style="color:var(--primary-light);font-size:1rem" id="price-max-label">{{ request('prix_max', 500) }} DT</strong>
+                    </div>
+                    <input type="range" name="prix_max" class="range-input" min="5" max="500" step="5" value="{{ request('prix_max', 500) }}" id="range-max" oninput="document.getElementById('price-max-label').textContent=this.value+' DT'">
+                </div>
+
+                {{-- State Filter --}}
+                <div class="filter-group">
+                    <div class="filter-label">État du vêtement</div>
+                    @foreach(['Neuf avec étiquette', 'Très bon état', 'Bon état', 'État correct'] as $etat)
                         <label class="filter-option">
-                            <input type="checkbox" name="etat[]" value="{{ $val }}" {{ in_array($val, (array)request('etat')) ? 'checked' : '' }}>
-                            {{ $label }}
+                            <input type="checkbox" name="etat[]" value="{{ $etat }}" {{ in_array($etat, (array)request('etat', [])) ? 'checked' : '' }}>
+                            {{ $etat }}
                         </label>
                     @endforeach
                 </div>
 
+                {{-- Gender Filter --}}
                 <div class="filter-group">
                     <div class="filter-label">Genre</div>
-                    @foreach(['Homme','Femme','Enfant','Unisexe'] as $g)
+                    @foreach(['Femme','Homme','Enfant','Unisexe'] as $g)
                         <label class="filter-option">
-                            <input type="checkbox" name="genre[]" value="{{ $g }}" {{ in_array($g, (array)request('genre')) ? 'checked' : '' }}>
+                            <input type="checkbox" name="genre[]" value="{{ $g }}" {{ in_array($g, (array)request('genre', [])) ? 'checked' : '' }}>
                             {{ $g }}
                         </label>
                     @endforeach
                 </div>
 
+                {{-- Sorting Filter --}}
                 <div class="filter-group">
-                    <div class="filter-label">Tri</div>
-                    <select name="tri" class="form-control form-control-sm" id="filter-sort">
+                    <div class="filter-label">Trier par</div>
+                    <select name="tri" class="form-control form-control-sm" id="filter-sort" onchange="this.form.submit()">
                         <option value="recent" {{ request('tri') == 'recent' ? 'selected' : '' }}>Plus récents</option>
-                        <option value="prix_asc" {{ request('tri') == 'prix_asc' ? 'selected' : '' }}>Prix croissant</option>
-                        <option value="prix_desc" {{ request('tri') == 'prix_desc' ? 'selected' : '' }}>Prix décroissant</option>
+                        <option value="prix_asc" {{ request('tri') == 'prix_asc' ? 'selected' : '' }}>Prix croissant (💰 ↑)</option>
+                        <option value="prix_desc" {{ request('tri') == 'prix_desc' ? 'selected' : '' }}>Prix décroissant (💰 ↓)</option>
                         <option value="ai_score" {{ request('tri') == 'ai_score' ? 'selected' : '' }}>Score IA ✦</option>
                     </select>
                 </div>
@@ -161,8 +177,8 @@
                 <a href="{{ route('marketplace.index') }}" class="btn btn-secondary" style="width:100%;margin-top:.5rem;justify-content:center">
                     Réinitialiser
                 </a>
-            </form>
-        </aside>
+            </aside>
+    </form>
 
         {{-- ─── PRODUCTS GRID ─── --}}
         <main>
@@ -171,6 +187,51 @@
                     <strong style="color:var(--text-primary)">{{ $articles->total() }}</strong> article{{ $articles->total() > 1 ? 's' : '' }} trouvé{{ $articles->total() > 1 ? 's' : '' }}
                 </div>
             </div>
+
+            {{-- ─── ACTIVE FILTERS PILLS ─── --}}
+            @if(request()->hasAny(['q','categorie','type','taille','etat','genre']) || (request()->filled('prix_max') && request('prix_max') < 500))
+                <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
+                    <span style="font-size:.78rem;color:var(--text-muted);font-weight:600">Filtres actifs :</span>
+                    @if(request('q'))
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            🔍 "{{ request('q') }}"
+                        </span>
+                    @endif
+                    @if(request('categorie'))
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            📁 {{ request('categorie') }}
+                        </span>
+                    @endif
+                    @if(request('type'))
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            🏷️ {{ request('type') == 'vente' ? 'Vente' : 'Échange' }}
+                        </span>
+                    @endif
+                    @if(request('taille'))
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            📏 T.{{ request('taille') }}
+                        </span>
+                    @endif
+                    @if(request()->filled('prix_max') && request('prix_max') < 500)
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            💰 &le; {{ request('prix_max') }} DT
+                        </span>
+                    @endif
+                    @foreach((array)request('etat', []) as $e)
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            ✨ {{ $e }}
+                        </span>
+                    @endforeach
+                    @foreach((array)request('genre', []) as $g)
+                        <span class="badge" style="background:rgba(108,99,255,.15);color:var(--primary-light);font-size:.78rem">
+                            👤 {{ $g }}
+                        </span>
+                    @endforeach
+                    <a href="{{ route('marketplace.index') }}" style="font-size:.78rem;color:var(--accent-red);margin-left:.25rem;text-decoration:none;font-weight:600">
+                        ✕ Tout effacer
+                    </a>
+                </div>
+            @endif
 
             @if($articles->isEmpty())
                 <div class="card" style="text-align:center;padding:3rem">
@@ -198,8 +259,8 @@
                             <div class="product-body">
                                 {{-- Badges --}}
                                 <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap">
-                                    <span class="badge {{ $article->type == 'vente' ? 'type-badge-vente' : ($article->type == 'echange' ? 'type-badge-echange' : 'type-badge-don') }} condition-badge">
-                                        {{ $article->type == 'vente' ? '💰' : ($article->type == 'echange' ? '🔄' : '❤️') }} {{ ucfirst($article->type) }}
+                                    <span class="badge {{ $article->type == 'vente' ? 'type-badge-vente' : 'type-badge-echange' }} condition-badge">
+                                        {{ $article->type == 'vente' ? '💰' : '🔄' }} {{ ucfirst($article->type) }}
                                     </span>
                                     <span class="badge condition-badge {{ $article->etat == 'neuf' || $article->etat == 'Neuf avec étiquette' ? 'condition-neuf' : ($article->etat == 'tres_bon' || str_contains($article->etat,'Très') ? 'condition-bon' : ($article->etat == 'bon' || str_contains($article->etat,'Bon') ? 'condition-bon' : 'condition-moyen')) }}">
                                         {{ $article->etat }}
@@ -222,10 +283,9 @@
                                 </div>
 
                                 <div class="product-footer">
-                                    <div class="product-price {{ $article->type == 'don' ? 'free' : ($article->type == 'echange' ? 'exchange' : '') }}">
-                                        @if($article->type == 'don') Gratuit
-                                        @elseif($article->type == 'echange') Échange
-                                        @else {{ number_format($article->prix, 2) }} DT
+                                    <div class="product-price {{ $article->type == 'echange' ? 'exchange' : '' }}">
+                                        @if($article->type == 'echange') Échange
+                                        @else {{ number_format($article->prix ?? 15, 2) }} DT
                                         @endif
                                     </div>
                                     <form method="POST" action="{{ route('marketplace.toggle-favori', $article) }}" style="display:inline">

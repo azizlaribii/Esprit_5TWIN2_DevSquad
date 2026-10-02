@@ -29,13 +29,6 @@
         </div>
     </div>
 
-    {{-- Flash success --}}
-    @if(session('success'))
-        <div style="margin-bottom:1.5rem;padding:1rem 1.25rem;border-radius:.5rem;background:var(--success-bg,#ecfdf5);border:1px solid #6ee7b7;color:#065f46;display:flex;align-items:center;gap:.75rem">
-            <span class="material-icons-round" style="font-size:1.25rem">check_circle</span>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
 
     {{-- ── SECTION 1 : Dons Intelligents (Donation model) ─────────────────── --}}
     <div class="card section" style="margin-bottom:2rem">

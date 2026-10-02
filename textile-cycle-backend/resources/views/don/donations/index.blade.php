@@ -23,13 +23,6 @@
         </div>
     </div>
 
-    {{-- Flash Message --}}
-    @if(session('success') || session('status'))
-        <div class="alert alert-success" style="margin-bottom:1.5rem">
-            <span class="material-icons-round">check_circle</span>
-            {{ session('success') ?? session('status') }}
-        </div>
-    @endif
 
     {{-- List of Donations --}}
     <div style="display:grid;gap:1rem">

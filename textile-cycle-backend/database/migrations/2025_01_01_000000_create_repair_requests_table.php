@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('repair_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('workshop_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('workshop_id')->nullable();
 
             $table->string('photo_path');
 

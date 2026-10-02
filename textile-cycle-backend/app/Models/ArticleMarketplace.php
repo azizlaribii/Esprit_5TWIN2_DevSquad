@@ -35,6 +35,12 @@ class ArticleMarketplace extends Model
 
     protected $appends = ['is_favori'];
 
+    // Convert any legacy 'don' type to 'vente'
+    public function getTypeAttribute($value)
+    {
+        return ($value === 'don') ? 'vente' : $value;
+    }
+
     // Relation: le vendeur (User)
     public function vendeur()
     {

@@ -1,7 +1,7 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', isset($article) ? 'Modifier l\'article' : 'Publier un article')
-@section('meta_description', 'Publiez un vêtement à vendre, échanger ou donner sur TexTileCycle')
+@section('meta_description', 'Publiez un vêtement à vendre ou échanger sur TexTileCycle')
 @section('breadcrumb', 'Marketplace › ' . (isset($article) ? 'Modifier' : 'Publier'))
 
 @section('styles')
@@ -136,8 +136,8 @@
 
                     <div class="form-group">
                         <label class="form-label" for="type">Type de transaction *</label>
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
-                            @foreach(['vente' => ['💰','Vente','primary'], 'echange' => ['🔄','Échange','warning'], 'don' => ['❤️','Don','success']] as $val => $info)
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem">
+                            @foreach(['vente' => ['💰','Vente','primary'], 'echange' => ['🔄','Échange','warning']] as $val => $info)
                                 <label style="cursor:pointer">
                                     <input type="radio" name="type" value="{{ $val }}" {{ old('type', $article->type ?? 'vente') == $val ? 'checked' : '' }} style="display:none" onchange="togglePriceField()">
                                     <div class="type-option badge-{{ $info[2] }}" style="padding:.75rem;border-radius:var(--radius-md);text-align:center;border:2px solid transparent;transition:var(--transition);cursor:pointer" onclick="selectType('{{ $val }}')">
@@ -243,7 +243,7 @@ function previewImage(input) {
 function togglePriceField() {
     const type = document.querySelector('input[name="type"]:checked')?.value;
     const section = document.getElementById('price-section');
-    if (section) section.style.opacity = type === 'don' ? '0.4' : '1';
+    if (section) section.style.opacity = type === 'echange' ? '0.6' : '1';
 }
 function selectType(val) {
     document.querySelectorAll('input[name="type"]').forEach(r => r.checked = (r.value === val));
