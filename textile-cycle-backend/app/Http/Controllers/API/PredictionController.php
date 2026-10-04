@@ -377,11 +377,11 @@ class PredictionController extends Controller
 
     private function getBesoinsAssociations(): array
     {
-        return \App\Models\Association::with('besoins')
-            ->where('statut', 'active')
+        return \App\Models\Association::with('needs')
+            ->whereNotNull('verified_at')
             ->take(10)
             ->get()
-            ->map(fn($a) => ['id' => $a->id, 'nom' => $a->nom, 'besoins_count' => $a->besoins->count()])
+            ->map(fn($a) => ['id' => $a->id, 'nom' => $a->nom, 'besoins_count' => $a->needs->count()])
             ->toArray();
     }
 
