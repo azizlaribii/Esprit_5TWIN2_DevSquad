@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Jobs\AnalyzeDonation;
 use App\Models\Association;
 use App\Models\Donation;
-use App\Models\DonationMatch;
 use App\Services\Geocoder;
 use App\Support\Textile;
+use App\Support\ValidationMessages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -50,7 +51,7 @@ class DonationController extends Controller
         $data = $request->validate($this->attributeRules() + [
             'photos'   => ['required', 'array', 'min:1', 'max:' . config('textilecycle.max_photos')],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:' . config('textilecycle.max_photo_kb')],
-        ]);
+        ], ValidationMessages::messages(), ValidationMessages::attributes());
 
         $coords = $this->coordinates($data, $geocoder);
 
@@ -102,7 +103,7 @@ class DonationController extends Controller
     {
         Gate::authorize('update', $donation);
 
-        $data = $request->validate($this->attributeRules());
+        $data = $request->validate($this->attributeRules(), ValidationMessages::messages(), ValidationMessages::attributes());
 
         $cityChanged = $data['city'] !== $donation->city;
         $coords      = $cityChanged || $donation->lat === null
@@ -133,19 +134,20 @@ class DonationController extends Controller
             ->with('status', 'Recherche relancée.');
     }
 
+    /** Suppression réelle : le don, ses suggestions, ses photos et les fichiers associés. */
     public function destroy(Donation $donation): RedirectResponse
     {
-        Gate::authorize('cancel', $donation);
+        Gate::authorize('delete', $donation);
 
         DB::transaction(function () use ($donation) {
-            $donation->matches()
-                ->whereIn('status', [DonationMatch::SUGGESTED, DonationMatch::REQUESTED])
-                ->update(['status' => DonationMatch::CANCELLED]);
-
-            $donation->update(['status' => Donation::CANCELLED]);
+            $donation->matches()->delete();
+            $donation->photos()->delete();
+            $donation->delete();
         });
 
-        return redirect()->route('donations.index')->with('status', 'Don annulé.');
+        Storage::disk('public')->deleteDirectory("donations/{$donation->id}");
+
+        return redirect()->route('dons.index')->with('success', 'Don supprimé.');
     }
 
     /** @return array<string, array<int, mixed>> */

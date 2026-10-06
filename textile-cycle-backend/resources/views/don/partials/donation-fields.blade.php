@@ -13,24 +13,28 @@
         <input id="title" name="title" type="text" required maxlength="120" class="{{ $input }}"
                placeholder="Ex. Manteau d'hiver enfant + 2 pulls"
                value="{{ old('title', $d?->title) }}">
+        @include('don.partials.field-error', ['name' => 'title'])
     </div>
 
     <div class="sm:col-span-2">
         <label class="{{ $label }}" for="description">Description <span class="font-normal text-stone-400">(facultatif)</span></label>
         <textarea id="description" name="description" rows="3" maxlength="2000" class="{{ $input }}"
                   placeholder="Marque, matière, défauts éventuels…">{{ old('description', $d?->description) }}</textarea>
+        @include('don.partials.field-error', ['name' => 'description'])
     </div>
 
     <div>
         <label class="{{ $label }}" for="quantity">Nombre de pièces</label>
         <input id="quantity" name="quantity" type="number" min="1" max="200" required class="{{ $input }}"
                value="{{ old('quantity', $d?->quantity ?? 1) }}">
+        @include('don.partials.field-error', ['name' => 'quantity'])
     </div>
 
     <div>
         <label class="{{ $label }}" for="city">Ville</label>
         <input id="city" name="city" type="text" required maxlength="100" class="{{ $input }}"
                value="{{ old('city', $d?->city) }}">
+        @include('don.partials.field-error', ['name' => 'city'])
         <input type="hidden" id="lat" name="lat" value="{{ old('lat') }}">
         <input type="hidden" id="lng" name="lng" value="{{ old('lng') }}">
         <button type="button" id="use-location" class="mt-1 text-xs text-emerald-700 hover:underline">
@@ -67,6 +71,7 @@
                         <option value="{{ $key }}" @selected(old($field, $d?->{$field}) === $key)>{{ $optionLabel }}</option>
                     @endforeach
                 </select>
+                @include('don.partials.field-error', ['name' => $field])
             </div>
         @endforeach
 
@@ -74,6 +79,7 @@
             <label class="{{ $label }}" for="size">Taille</label>
             <input id="size" name="size" type="text" list="sizes" maxlength="20" class="{{ $input }}"
                    placeholder="M, 5-6a, 42…" value="{{ old('size', $d?->size) }}">
+            @include('don.partials.field-error', ['name' => 'size'])
             <datalist id="sizes">
                 @foreach (Textile::SIZE_ORDER as $size)
                     <option value="{{ $size }}">

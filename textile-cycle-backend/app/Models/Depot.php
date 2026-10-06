@@ -15,6 +15,8 @@ class Depot extends Model
         'quantite',
         'etat',
         'statut',
+        'description',
+        'photo',
     ];
 
     public function user()

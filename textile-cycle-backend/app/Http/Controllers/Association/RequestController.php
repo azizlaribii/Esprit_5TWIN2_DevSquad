@@ -9,6 +9,7 @@ use App\Models\DonationMatch;
 use App\Notifications\MatchAccepted;
 use App\Notifications\MatchRejected;
 use App\Support\Textile;
+use App\Support\ValidationMessages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ class RequestController extends Controller
             'meeting_type' => ['required', Rule::in(array_keys(Textile::MEETING_TYPES))],
             'meeting_at'   => ['required', 'date', 'after:now'],
             'meeting_note' => ['nullable', 'string', 'max:500'],
-        ]);
+        ], ValidationMessages::messages(), ValidationMessages::attributes());
 
         DB::transaction(function () use ($donationMatch, $data) {
             $donationMatch->update($data + [

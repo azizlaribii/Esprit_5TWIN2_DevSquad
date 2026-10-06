@@ -28,14 +28,13 @@
     <div style="display:grid;gap:1rem">
         @forelse ($donations as $donation)
             @php
-                use App\Models\Donation;
                 $statusClass = match($donation->status) {
-                    Donation::ACCEPTED, Donation::COMPLETED => 'badge-success',
-                    Donation::MATCHED                      => 'badge-info',
-                    Donation::PENDING_ANALYSIS             => 'badge-warning',
-                    Donation::NEEDS_REVIEW                 => 'badge-warning',
-                    Donation::REQUESTED                    => 'badge-info',
-                    Donation::CANCELLED                    => 'badge-danger',
+                    \App\Models\Donation::ACCEPTED, \App\Models\Donation::COMPLETED => 'badge-success',
+                    \App\Models\Donation::MATCHED                      => 'badge-info',
+                    \App\Models\Donation::PENDING_ANALYSIS             => 'badge-warning',
+                    \App\Models\Donation::NEEDS_REVIEW                 => 'badge-warning',
+                    \App\Models\Donation::REQUESTED                    => 'badge-info',
+                    \App\Models\Donation::CANCELLED                    => 'badge-danger',
                     default                                => 'badge-secondary',
                 };
             @endphp
