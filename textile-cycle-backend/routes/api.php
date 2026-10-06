@@ -58,18 +58,19 @@ Route::prefix('predictions')->group(function () {
 });
 
 // ==================== RÉPARATIONS & ATELIERS (IA & CRUD) ====================
-Route::get('/repairs', [\App\Http\Controllers\Api\RepairController::class, 'index']);
-Route::post('/repairs', [\App\Http\Controllers\Api\RepairController::class, 'store']);
-Route::get('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'show']);
-Route::delete('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'destroy']);
+Route::get('/repairs', [\App\Http\Controllers\API\RepairController::class, 'index']);
+Route::post('/repairs', [\App\Http\Controllers\API\RepairController::class, 'store']);
+Route::get('/repairs/{repairRequest}', [\App\Http\Controllers\API\RepairController::class, 'show']);
+Route::delete('/repairs/{repairRequest}', [\App\Http\Controllers\API\RepairController::class, 'destroy']);
 
-Route::get('/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'index']);
-Route::post('/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'store']);
-Route::get('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'show']);
-Route::put('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'update']);
-Route::delete('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'destroy']);
+// ==================== ATELIERS ====================
+Route::get('/workshops', [\App\Http\Controllers\API\WorkshopController::class, 'index']);
+Route::post('/workshops', [\App\Http\Controllers\API\WorkshopController::class, 'store']);
+Route::get('/workshops/{workshop}', [\App\Http\Controllers\API\WorkshopController::class, 'show']);
+Route::put('/workshops/{workshop}', [\App\Http\Controllers\API\WorkshopController::class, 'update']);
+Route::delete('/workshops/{workshop}', [\App\Http\Controllers\API\WorkshopController::class, 'destroy']);
 
-Route::get('/repairs/{repairRequest}/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'forRepair']);
-Route::post('/repairs/{repairRequest}/workshop', [\App\Http\Controllers\Api\WorkshopController::class, 'choose']);
-Route::post('/reparations/{repairRequest}/ateliers/choisir', [\App\Http\Controllers\Api\WorkshopController::class, 'choose']);
-
+// ==================== RÉPARATIONS ↔ ATELIERS ====================
+Route::get('/repairs/{repairRequest}/workshops', [\App\Http\Controllers\API\WorkshopController::class, 'forRepair']);
+Route::post('/repairs/{repairRequest}/workshop', [\App\Http\Controllers\API\WorkshopController::class, 'choose']);
+Route::post('/reparations/{repairRequest}/ateliers/choisir', [\App\Http\Controllers\API\WorkshopController::class, 'choose']);

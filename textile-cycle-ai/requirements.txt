@@ -4,7 +4,9 @@ pandas
 numpy
 scikit-learn
 pydantic
+pydantic-settings
 python-dotenv
 httpx
 joblib
 scipy
+prophet

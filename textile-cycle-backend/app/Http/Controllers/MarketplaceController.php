@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Http\Requests\MarketplaceRequest;
 
 /**
  * MarketplaceController – CRUD complet + Moteur IA
@@ -124,32 +125,10 @@ class MarketplaceController extends Controller
     // ══════════════════════════════════════════════════════
     // STORE – Enregistrement avec validation + IA
     // ══════════════════════════════════════════════════════
-    public function store(Request $request)
+    public function store(MarketplaceRequest $request)
     {
         // ── Validation côté serveur
-        $validated = $request->validate([
-            'titre'          => 'required|string|min:5|max:120',
-            'description'    => 'required|string|min:20|max:2000',
-            'categorie'      => 'required|string|max:80',
-            'marque'         => 'nullable|string|max:80',
-            'taille'         => 'required|string|max:10',
-            'genre'          => 'required|in:Homme,Femme,Enfant,Unisexe',
-            'etat'           => 'required|string',
-            'type'           => 'required|in:vente,echange',
-            'prix'           => 'nullable|numeric|min:0|max:9999',
-            'article_echange'=> 'nullable|string|max:150',
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-        ], [
-            'titre.required'       => 'Le titre est obligatoire.',
-            'titre.min'            => 'Le titre doit contenir au moins 5 caractères.',
-            'description.required' => 'La description est obligatoire.',
-            'description.min'      => 'La description doit contenir au moins 20 caractères.',
-            'categorie.required'   => 'Veuillez sélectionner une catégorie.',
-            'etat.required'        => 'Veuillez préciser l\'état du vêtement.',
-            'type.required'        => 'Veuillez choisir un type de transaction.',
-            'image.mimes'          => 'L\'image doit être au format JPEG, PNG ou WebP.',
-            'image.max'            => 'L\'image ne doit pas dépasser 5 MB.',
-        ]);
+        $validated = $request->validated();
 
         // ── Upload image
         $imageUrl = null;
@@ -227,23 +206,11 @@ class MarketplaceController extends Controller
     // ══════════════════════════════════════════════════════
     // UPDATE – Modification avec validation
     // ══════════════════════════════════════════════════════
-    public function update(Request $request, ArticleMarketplace $article)
+    public function update(MarketplaceRequest $request, ArticleMarketplace $article)
     {
         // if (Auth::id() !== $article->user_id) abort(403);
 
-        $validated = $request->validate([
-            'titre'          => 'required|string|min:5|max:120',
-            'description'    => 'required|string|min:20|max:2000',
-            'categorie'      => 'required|string|max:80',
-            'marque'         => 'nullable|string|max:80',
-            'taille'         => 'required|string|max:10',
-            'genre'          => 'required|in:Homme,Femme,Enfant,Unisexe',
-            'etat'           => 'required|string',
-            'type'           => 'required|in:vente,echange',
-            'prix'           => 'nullable|numeric|min:0|max:9999',
-            'article_echange'=> 'nullable|string|max:150',
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-        ]);
+        $validated = $request->validated();
 
         // Nouvelle image ?
         if ($request->hasFile('image')) {

@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 class EvaluationVendeur extends Model
 {
     use HasFactory;
+<<<<<<< HEAD
+=======
+
+    protected $table = 'evaluations_vendeurs';
+    protected $fillable = ['article_id', 'evaluateur_id', 'vendeur_id', 'note', 'commentaire'];
+>>>>>>> Aziz-Laribi
 
     protected $table = 'evaluations_vendeurs';
 

@@ -73,7 +73,7 @@ class DonationController extends Controller
 
         AnalyzeDonation::dispatch($donation);
 
-        return redirect()->route('dons.index')
+        return redirect()->route('donations.index')
             ->with('success', '🎁 Merci ! Votre don a bien été enregistré. Nous cherchons les associations les plus adaptées.');
     }
 
