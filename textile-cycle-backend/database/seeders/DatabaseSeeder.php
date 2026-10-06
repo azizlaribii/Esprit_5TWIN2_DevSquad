@@ -11,6 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TexTileCycleSeeder::class,
             MarketplaceSeeder::class,
+            FactoryRelationsSeeder::class,
+         DepotSeeder::class,   // le tien, en dernier
         ]);
     }
 }
