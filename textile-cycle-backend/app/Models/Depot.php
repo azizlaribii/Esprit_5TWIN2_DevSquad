@@ -23,4 +23,9 @@ class Depot extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function transformations()
+    {
+        return $this->hasMany(Transformation::class);
+    }
 }

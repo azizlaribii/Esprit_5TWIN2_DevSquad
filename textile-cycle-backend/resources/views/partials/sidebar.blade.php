@@ -46,7 +46,11 @@
             <span class="nav-icon material-icons-round">volunteer_activism</span>
             <span class="nav-label">Dons</span>
         </a>
-
+                <a href="/upcycling/projets" class="nav-item {{ request()->is('upcycling*') ? 'active' : '' }}">
+            <span class="nav-icon material-icons-round">recycling</span>
+            <span class="nav-label">Upcycling</span>
+            <span class="nav-badge" style="background:#6C63FF">IA</span>
+        </a>
         <div class="nav-section-label">Partenaires</div>
         <a href="/ateliers" class="nav-item {{ request()->is('ateliers*') ? 'active' : '' }}">
             <span class="nav-icon material-icons-round">precision_manufacturing</span>

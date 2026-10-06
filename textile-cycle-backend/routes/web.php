@@ -5,6 +5,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\DashboardViewController;
 use App\Http\Controllers\AssociationController;
 use App\Http\Controllers\DepotController;
+
 /*
 |--------------------------------------------------------------------------
 | Routes Web – TexTileCycle
@@ -21,7 +22,8 @@ Route::get('/statistiques',  [DashboardViewController::class, 'statistiques'])->
 Route::get('/predictions',   [DashboardViewController::class, 'predictions'])->name('predictions.index');
 
 // ── Gestion du circuit textile
-Route::resource('depots', DepotController::class);Route::get('/reparations',   [DashboardViewController::class, 'reparations'])->name('reparations.index');
+Route::resource('depots', DepotController::class);
+Route::get('/reparations',   [DashboardViewController::class, 'reparations'])->name('reparations.index');
 Route::get('/dons',          [DashboardViewController::class, 'dons'])->name('dons.index');
 
 // ── Partenaires
@@ -41,3 +43,4 @@ Route::resource('marketplace', MarketplaceController::class)->parameters([
 ]);
 require __DIR__.'/don.php';
 require __DIR__.'/reparation.php';
+require __DIR__.'/upcycling.php';

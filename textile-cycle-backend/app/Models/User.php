@@ -30,7 +30,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Depot::class);
     }
-
+        public function transformations()
+    {
+        return $this->hasMany(Transformation::class);
+    }
     // Relations Marketplace (1-N : un utilisateur a plusieurs articles)
     public function articlesMarketplace()
     {
