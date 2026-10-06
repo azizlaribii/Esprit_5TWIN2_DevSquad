@@ -72,11 +72,11 @@
             @can('update', $donation)
                 <a href="{{ route('donations.edit', $donation) }}" class="text-emerald-700 hover:underline">Modifier</a>
             @endcan
-            @can('cancel', $donation)
+            @can('delete', $donation)
                 <form method="POST" action="{{ route('donations.destroy', $donation) }}"
-                      onsubmit="return confirm('Annuler ce don ?')">
+                      onsubmit="return confirm('Supprimer définitivement ce don ?')">
                     @csrf @method('DELETE')
-                    <button class="text-red-600 hover:underline">Annuler le don</button>
+                    <button class="text-red-600 hover:underline">Supprimer le don</button>
                 </form>
             @endcan
         </div>

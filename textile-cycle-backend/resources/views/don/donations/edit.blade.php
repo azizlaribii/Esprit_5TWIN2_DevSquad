@@ -11,7 +11,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('donations.update', $donation) }}"
+    <form novalidate method="POST" action="{{ route('donations.update', $donation) }}"
           class="mt-6 rounded-lg border border-stone-200 bg-white p-6">
         @csrf
         @method('PUT')
