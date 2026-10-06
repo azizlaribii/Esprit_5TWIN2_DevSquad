@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EvaluationVendeur extends Model
 {
+    use HasFactory;
+
     protected $table = 'evaluations_vendeurs';
     protected $fillable = ['article_id', 'evaluateur_id', 'vendeur_id', 'note', 'commentaire'];
 
