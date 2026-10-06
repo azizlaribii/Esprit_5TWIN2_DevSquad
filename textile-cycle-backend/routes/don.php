@@ -26,9 +26,9 @@ Route::getRoutes()->refreshNameLookups();
 if (! Route::has('login')) {
     Route::middleware('guest')->group(function () {
         Route::get('/login', [WebAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [WebAuthController::class, 'login'])->name('login.post');
+        Route::post('/login', [WebAuthController::class, 'login']);
         Route::get('/register', [WebAuthController::class, 'showRegisterForm'])->name('register');
-        Route::post('/register', [WebAuthController::class, 'register'])->name('register.post');
+        Route::post('/register', [WebAuthController::class, 'register']);
     });
     Route::post('/logout', [WebAuthController::class, 'logout'])->middleware('auth')->name('logout');
 }
