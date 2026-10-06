@@ -51,7 +51,7 @@
 <section class="mt-8 rounded-lg border border-stone-200 bg-white p-6">
     <h2 class="text-lg font-semibold">Ajouter un besoin</h2>
 
-    <form method="POST" action="{{ route('association.needs.store') }}" class="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <form novalidate method="POST" action="{{ route('association.needs.store') }}" class="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @csrf
 
         <div>
@@ -62,6 +62,7 @@
                     <option value="{{ $key }}" @selected(old('category') === $key)>{{ $text }}</option>
                 @endforeach
             </select>
+            @include('don.partials.field-error', ['name' => 'category'])
         </div>
 
         <div>
@@ -72,11 +73,13 @@
                     <option value="{{ $key }}" @selected(old('age_group') === $key)>{{ $text }}</option>
                 @endforeach
             </select>
+            @include('don.partials.field-error', ['name' => 'age_group'])
         </div>
 
         <div>
             <label class="{{ $label }}" for="size">Taille</label>
             <input id="size" name="size" list="sizes" maxlength="20" class="{{ $input }}" placeholder="Toutes" value="{{ old('size') }}">
+            @include('don.partials.field-error', ['name' => 'size'])
             <datalist id="sizes">
                 @foreach (Textile::SIZE_ORDER as $size)<option value="{{ $size }}">@endforeach
             </datalist>
@@ -90,6 +93,7 @@
                     <option value="{{ $key }}" @selected(old('gender') === $key)>{{ $text }}</option>
                 @endforeach
             </select>
+            @include('don.partials.field-error', ['name' => 'gender'])
         </div>
 
         <div>
@@ -100,11 +104,13 @@
                     <option value="{{ $key }}" @selected(old('season') === $key)>{{ $text }}</option>
                 @endforeach
             </select>
+            @include('don.partials.field-error', ['name' => 'season'])
         </div>
 
         <div>
             <label class="{{ $label }}" for="quantity_needed">Quantité recherchée</label>
             <input id="quantity_needed" name="quantity_needed" type="number" min="1" required class="{{ $input }}" value="{{ old('quantity_needed', 10) }}">
+            @include('don.partials.field-error', ['name' => 'quantity_needed'])
         </div>
 
         <div>
@@ -114,11 +120,13 @@
                     <option value="{{ $key }}" @selected((int) old('urgency', 3) === $key)>{{ $text }}</option>
                 @endforeach
             </select>
+            @include('don.partials.field-error', ['name' => 'urgency'])
         </div>
 
         <div>
             <label class="{{ $label }}" for="expires_at">Valable jusqu'au <span class="font-normal text-stone-400">(facultatif)</span></label>
             <input id="expires_at" name="expires_at" type="date" class="{{ $input }}" value="{{ old('expires_at') }}">
+            @include('don.partials.field-error', ['name' => 'expires_at'])
         </div>
 
         <div class="flex items-end">

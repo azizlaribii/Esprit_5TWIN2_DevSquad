@@ -78,7 +78,7 @@
     <section class="mt-6 rounded-lg border border-stone-200 bg-white p-6">
         <h2 class="text-lg font-semibold">Répondre à la demande</h2>
 
-        <form method="POST" action="{{ route('association.requests.accept', $match) }}" class="mt-4 grid gap-5 sm:grid-cols-2">
+        <form novalidate method="POST" action="{{ route('association.requests.accept', $match) }}" class="mt-4 grid gap-5 sm:grid-cols-2">
             @csrf
 
             <div>
@@ -88,16 +88,19 @@
                         <option value="{{ $key }}" @selected(old('meeting_type') === $key)>{{ $text }}</option>
                     @endforeach
                 </select>
+                @include('don.partials.field-error', ['name' => 'meeting_type'])
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-stone-700" for="meeting_at">Date et heure</label>
                 <input id="meeting_at" name="meeting_at" type="datetime-local" required class="{{ $input }}" value="{{ old('meeting_at') }}">
+                @include('don.partials.field-error', ['name' => 'meeting_at'])
             </div>
 
             <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-stone-700" for="meeting_note">Précisions <span class="font-normal text-stone-400">(adresse de dépôt, consignes…)</span></label>
                 <textarea id="meeting_note" name="meeting_note" rows="2" maxlength="500" class="{{ $input }}">{{ old('meeting_note') }}</textarea>
+                @include('don.partials.field-error', ['name' => 'meeting_note'])
             </div>
 
             <div class="flex items-center gap-3 sm:col-span-2">

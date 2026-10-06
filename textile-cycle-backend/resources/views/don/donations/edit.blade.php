@@ -111,7 +111,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('donations.update', $donation) }}">
+    <form novalidate method="POST" action="{{ route('donations.update', $donation) }}">
     @csrf
     @method('PUT')
 
@@ -133,12 +133,14 @@
                 <input id="title" name="title" type="text" required maxlength="120" class="form-control"
                        placeholder="Ex. Manteau d'hiver enfant + 2 pulls laine"
                        value="{{ old('title', $donation->title) }}">
+                @include('don.partials.field-error', ['name' => 'title'])
             </div>
 
             <div>
                 <label class="form-label" for="description">Description <span style="color:var(--text-muted);font-weight:400">(facultatif)</span></label>
                 <textarea id="description" name="description" rows="3" maxlength="2000" class="form-control"
                           placeholder="Marque, matière, défauts éventuels…">{{ old('description', $donation->description) }}</textarea>
+                @include('don.partials.field-error', ['name' => 'description'])
             </div>
 
             <div class="fields-grid">
@@ -146,12 +148,14 @@
                     <label class="form-label" for="quantity">Nombre de pièces <span style="color:var(--accent-red)">*</span></label>
                     <input id="quantity" name="quantity" type="number" min="1" max="200" required
                            class="form-control" value="{{ old('quantity', $donation->quantity ?? 1) }}">
+                    @include('don.partials.field-error', ['name' => 'quantity'])
                 </div>
 
                 <div>
                     <label class="form-label" for="city">Ville <span style="color:var(--accent-red)">*</span></label>
                     <input id="city" name="city" type="text" required maxlength="100" class="form-control"
                            placeholder="Tunis" value="{{ old('city', $donation->city) }}">
+                    @include('don.partials.field-error', ['name' => 'city'])
                     <input type="hidden" id="lat" name="lat" value="{{ old('lat', $donation->lat) }}">
                     <input type="hidden" id="lng" name="lng" value="{{ old('lng', $donation->lng) }}">
                     <button type="button" id="use-location"
@@ -197,6 +201,7 @@
                         <option value="{{ $key }}" @selected(old($field, $donation->{$field}) === $key)>{{ $optLabel }}</option>
                     @endforeach
                 </select>
+                @include('don.partials.field-error', ['name' => $field])
             </div>
             @endforeach
 
@@ -204,6 +209,7 @@
                 <label class="form-label" for="size">Taille</label>
                 <input id="size" name="size" type="text" list="sizes" maxlength="20"
                        class="form-control" placeholder="M, 5-6a, 42…" value="{{ old('size', $donation->size) }}">
+                @include('don.partials.field-error', ['name' => 'size'])
                 <datalist id="sizes">
                     @foreach(Textile::SIZE_ORDER as $s)<option value="{{ $s }}">@endforeach
                 </datalist>

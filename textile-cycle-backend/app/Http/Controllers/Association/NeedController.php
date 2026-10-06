@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Association;
 use App\Http\Controllers\Controller;
 use App\Models\AssociationNeed;
 use App\Support\Textile;
+use App\Support\ValidationMessages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -41,7 +42,7 @@ class NeedController extends Controller
             'quantity_needed' => ['required', 'integer', 'min:1', 'max:100000'],
             'urgency'         => ['required', 'integer', 'between:1,5'],
             'expires_at'      => ['nullable', 'date', 'after_or_equal:today'],
-        ]);
+        ], ValidationMessages::messages(), ValidationMessages::attributes());
 
         $association->needs()->create($data);
 

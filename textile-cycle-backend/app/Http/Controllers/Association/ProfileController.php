@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Association;
 use App\Services\Geocoder;
 use App\Support\Textile;
+use App\Support\ValidationMessages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,7 +34,7 @@ class ProfileController extends Controller
             'accepted_conditions.*' => [Rule::in(array_keys(Textile::CONDITIONS))],
             'accepted_categories'   => ['nullable', 'array'],
             'accepted_categories.*' => [Rule::in(array_keys(Textile::CATEGORIES))],
-        ]);
+        ], ValidationMessages::messages(), ValidationMessages::attributes());
 
         $association = $request->user()->association;
 
