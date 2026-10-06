@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TexTileCycleSeeder::class,
             MarketplaceSeeder::class,
+            FactoryRelationsSeeder::class, // ✅ Bonnes pratiques : factories + relations
         ]);
     }
 }

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Trouver un atelier de réparation')
 @section('meta_description', 'Sélectionnez un atelier partenaire spécialisé pour réparer votre vêtement')
@@ -323,7 +323,7 @@ function toast(msg, type = 'success') {
 function renderFilters() {
     const el = document.getElementById('filterList');
     if (!el) return;
-    if (CURRENT_DEF && ALL_SPECS.includes(CURRENT_DEF)) activeSpecs = [CURRENT_DEF];
+    // Pas de pré-sélection : tous les ateliers sont affichés par défaut
     el.innerHTML = ALL_SPECS.map(s => `
         <label style="display:flex;align-items:center;gap:.55rem;font-size:.85rem;color:var(--text-secondary);cursor:pointer">
             <input type="checkbox" value="${s}" onchange="toggleFilter('${s}',this.checked)"
@@ -338,7 +338,8 @@ function toggleFilter(s, on) {
 
 /* ── Load & render ── */
 async function loadWorkshops() {
-    let url = `/api/repairs/${REPAIR_ID}/workshops`;
+    // Charger TOUS les ateliers pour que chaque réparation les voie tous
+    let url = `/api/workshops`;
     if (userLat && userLng) url += `?lat=${userLat}&lng=${userLng}`;
     try {
         const r = await fetch(url);
@@ -612,8 +613,20 @@ function locateUser() {
 /* ─────────────────────────────────────
    Callback pour le modal "Ajouter un atelier" (partials/workshop-modal)
 ───────────────────────────────────── */
-window.onWorkshopSaved = async () => {
-    await loadWorkshops();
+window.onWorkshopSaved = async (newWorkshop) => {
+    if (newWorkshop) {
+        // Ajouter en tête de liste
+        allWorkshops = [newWorkshop, ...allWorkshops];
+
+        // Effacer les filtres actifs pour que le nouvel atelier soit toujours visible
+        activeSpecs = [];
+        document.querySelectorAll('#filterList input[type="checkbox"]')
+            .forEach(cb => cb.checked = false);
+
+        renderWorkshops();
+    } else {
+        await loadWorkshops();
+    }
     toast('Nouvel atelier ajouté ✓');
 };
 
