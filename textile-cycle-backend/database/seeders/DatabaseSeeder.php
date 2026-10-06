@@ -9,8 +9,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            
             TexTileCycleSeeder::class,
             MarketplaceSeeder::class,
+            DepotSeeder::class,  
         ]);
     }
 }
