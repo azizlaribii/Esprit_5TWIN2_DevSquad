@@ -63,6 +63,7 @@ Route::post('/repairs', [\App\Http\Controllers\Api\RepairController::class, 'sto
 Route::get('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'show']);
 Route::delete('/repairs/{repairRequest}', [\App\Http\Controllers\Api\RepairController::class, 'destroy']);
 
+Route::get('/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'index']);
 Route::post('/workshops', [\App\Http\Controllers\Api\WorkshopController::class, 'store']);
 Route::get('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'show']);
 Route::put('/workshops/{workshop}', [\App\Http\Controllers\Api\WorkshopController::class, 'update']);

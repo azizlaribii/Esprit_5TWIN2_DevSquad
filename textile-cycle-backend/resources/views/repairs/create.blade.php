@@ -279,5 +279,14 @@ async function submitAnalysis() {
         showError(err.message || "Erreur lors de l'analyse. Réessayez.");
     }
 }
+
+window.onWorkshopSaved = function(newWorkshop) {
+    const name = newWorkshop?.name ?? 'L\'atelier';
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:99999;padding:.9rem 1.4rem;border-radius:12px;background:rgba(67,217,173,.15);border:1px solid rgba(67,217,173,.4);color:#43D9AD;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.6rem;box-shadow:0 8px 24px rgba(0,0,0,.4);';
+    toast.innerHTML = `<span class="material-icons-round">check_circle</span> <span>${name} ajouté avec succès !</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+};
 </script>
 @endpush
