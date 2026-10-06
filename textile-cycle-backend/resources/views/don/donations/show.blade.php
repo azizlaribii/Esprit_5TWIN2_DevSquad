@@ -151,12 +151,12 @@
                 </a>
             @endcan
 
-            @can('cancel', $donation)
+            @can('delete', $donation)
                 <form method="POST" action="{{ route('donations.destroy', $donation) }}"
-                      onsubmit="return confirm('Êtes-vous sûr de vouloir annuler ce don ?')">
+                      onsubmit="return confirm('Supprimer définitivement ce don ?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm" style="display:inline-flex;align-items:center;gap:.3rem">
-                        <span class="material-icons-round" style="font-size:.95rem">cancel</span> Annuler le don
+                        <span class="material-icons-round" style="font-size:.95rem">delete</span> Supprimer le don
                     </button>
                 </form>
             @endcan
