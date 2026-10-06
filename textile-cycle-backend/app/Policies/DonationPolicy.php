@@ -25,6 +25,13 @@ class DonationPolicy
             && ($donation->isEditable() || $donation->status === Donation::REQUESTED);
     }
 
+    /** Suppression définitive : tant que le don n'est ni accepté ni remis. */
+    public function delete(User $user, Donation $donation): bool
+    {
+        return $user->id === $donation->user_id
+            && ! in_array($donation->status, [Donation::ACCEPTED, Donation::COMPLETED], true);
+    }
+
     /** Le donateur choisit une association parmi les suggestions. */
     public function choose(User $user, Donation $donation): bool
     {
