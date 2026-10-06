@@ -13,9 +13,9 @@
             <p class="page-subtitle">Suivi des points de collecte et vêtements déposés pour revalorisation</p>
         </div>
         <div style="display:flex;gap:.75rem">
-            <a href="{{ route('marketplace.create') }}" class="btn btn-primary">
-                <span class="material-icons-round">add_circle</span> Déposer ou Publier
-            </a>
+<a href="{{ route('depots.create') }}" class="btn btn-primary">
+    <span class="material-icons-round">add_circle</span> Nouveau dépôt
+</a>
         </div>
     </div>
 
@@ -39,28 +39,68 @@
                         <th>État Initial</th>
                         <th>Statut</th>
                         <th>Date de Dépôt</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($depots as $depot)
+@forelse($depots as $depot)
+    <tr>
+        <td>#{{ $depot->id }}</td>
+
+        <td>
+            <strong>
+                {{ $depot->user->name ?? 'Utilisateur #' . $depot->user_id }}
+            </strong>
+        </td>
+
+        <td>{{ $depot->categorie }}</td>
+
+        <td>{{ $depot->quantite }} pièces</td>
+
+        <td>
+            <span class="badge badge-info">
+                {{ $depot->etat }}
+            </span>
+        </td>
+
+        <td>
+            <span class="badge {{ $depot->statut === 'valide' ? 'badge-success' : 'badge-warning' }}">
+                {{ ucfirst(str_replace('_', ' ', $depot->statut)) }}
+            </span>
+        </td>
+
+        <td>
+            {{ $depot->created_at ? $depot->created_at->format('d/m/Y H:i') : 'N/A' }}
+        </td>
+
+        {{-- NOUVEAU : Actions --}}
+        <td>
+            <div style="display:flex;gap:.4rem">
+                <a href="{{ route('depots.show', $depot) }}" class="btn btn-secondary btn-sm">
+                    Voir
+                </a>
+
+                <a href="{{ route('depots.edit', $depot) }}" class="btn btn-secondary btn-sm">
+                    Modifier
+                </a>
+
+                <form method="POST"
+                      action="{{ route('depots.destroy', $depot) }}"
+                      onsubmit="return confirm('Supprimer ce dépôt ?')">
+
+                    @csrf
+                    @method('DELETE')
+
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+        </td>
+    </tr>
+@empty
                         <tr>
-                            <td>#{{ $depot->id }}</td>
-                            <td><strong>{{ $depot->user->name ?? 'Utilisateur #' . $depot->user_id }}</strong></td>
-                            <td>{{ $depot->categorie }}</td>
-                            <td>{{ $depot->quantite }} pièces</td>
-                            <td>
-                                <span class="badge badge-info">{{ $depot->etat }}</span>
-                            </td>
-                            <td>
-                                <span class="badge {{ $depot->statut === 'valide' ? 'badge-success' : 'badge-warning' }}">
-                                    {{ ucfirst(str_replace('_', ' ', $depot->statut)) }}
-                                </span>
-                            </td>
-                            <td>{{ $depot->created_at ? $depot->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">
+                            <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">
                                 Aucun dépôt trouvé.
                             </td>
                         </tr>

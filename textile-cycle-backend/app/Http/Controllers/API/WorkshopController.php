@@ -9,6 +9,20 @@ use Illuminate\Http\Request;
 
 class WorkshopController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = Workshop::query();
+
+        if ($request->filled('lat') && $request->filled('lng')) {
+            $query->nearestFirst((float) $request->lat, (float) $request->lng);
+        } else {
+            $query->orderByDesc('rating');
+        }
+
+        $workshops = $query->limit(100)->get();
+        return response()->json(['data' => $workshops]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -74,11 +88,14 @@ class WorkshopController extends Controller
 
         $query = Workshop::query();
 
-        // Le where est groupé pour que le orWhere ne casse pas les autres conditions
+        // Compatibilité unicode escapé en base (JSON stocké avec \uXXXX)
+        // On utilise LIKE comme fallback robuste car JSON_CONTAINS échoue sur les accents escapés
         $query->when($repairRequest->defect_type, function ($q) use ($repairRequest) {
-            $q->where(function ($sub) use ($repairRequest) {
-                $sub->whereJsonContains('specialties', $repairRequest->defect_type)
-                    ->orWhereJsonContains('specialties', 'Général');
+            $defect  = '%' . $repairRequest->defect_type . '%';
+            $general = '%Général%';
+            $q->where(function ($sub) use ($defect, $general) {
+                $sub->where('specialties', 'like', $defect)
+                    ->orWhere('specialties', 'like', $general);
             });
         });
 

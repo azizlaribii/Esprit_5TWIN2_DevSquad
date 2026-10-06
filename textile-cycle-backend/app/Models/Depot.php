@@ -15,13 +15,16 @@ class Depot extends Model
         'quantite',
         'etat',
         'statut',
+        'description',
+        'photo',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-        public function transformations()
+
+    public function transformations()
     {
         return $this->hasMany(Transformation::class);
     }
