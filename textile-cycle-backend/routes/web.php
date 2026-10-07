@@ -22,6 +22,7 @@ Route::get('/statistiques',  [DashboardViewController::class, 'statistiques'])->
 Route::get('/predictions',   [DashboardViewController::class, 'predictions'])->name('predictions.index');
 
 // ── Gestion du circuit textile
+Route::post('depots/analyser', [DepotController::class, 'analyser'])->name('depots.analyser');
 Route::resource('depots', DepotController::class);
 Route::get('/reparations',   [DashboardViewController::class, 'reparations'])->name('reparations.index');
 Route::get('/dons',          [DashboardViewController::class, 'dons'])->name('dons.index');
