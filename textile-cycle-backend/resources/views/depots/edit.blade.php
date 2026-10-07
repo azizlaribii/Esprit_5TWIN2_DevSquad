@@ -8,8 +8,13 @@
     <h1 class="page-title">Modifier le dépôt #{{ $depot->id }}</h1>
 
     <div class="card" >
-        <form method="POST" action="{{ route('depots.update', $depot) }}" enctype="multipart/form-data">
-            @csrf
+<form method="POST" action="{{ route('depots.update', $depot) }}" enctype="multipart/form-data"
+      data-confirm
+      data-confirm-type="warning"
+      data-confirm-title="Modifier le dépôt #{{ $depot->id }} ?"
+      data-confirm-message="Êtes-vous sûr de vouloir enregistrer les modifications du dépôt #{{ $depot->id }} ({{ $depot->categorie }}) ?"
+      data-confirm-ok="Oui, modifier">
+                  @csrf
             @method('PUT')
             @include('depots._form')
             <div style="display:flex;gap:.75rem">

@@ -119,6 +119,7 @@
         </div>
     </div>
 </div>
+@include('partials.confirm-modal')
 @include('partials.workshop-modal')
 @yield('scripts')
 @stack('scripts')
