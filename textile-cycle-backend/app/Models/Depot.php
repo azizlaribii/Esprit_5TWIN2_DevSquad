@@ -10,22 +10,12 @@ class Depot extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'categorie',
-        'quantite',
-        'etat',
-        'statut',
-        'description',
-        'photo',
+        'user_id', 'categorie', 'quantite', 'etat', 'statut', 'description', 'photo',
+        'ai_type', 'ai_couleur', 'ai_etat', 'ai_matiere', 'ai_confiance',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function transformations()
-    {
-        return $this->hasMany(Transformation::class);
     }
 }

@@ -23,6 +23,11 @@ public function definition(): array
             'statut'      => fake()->randomElement(['en_attente', 'valide', 'traite']),
             'description' => fake()->sentence(10),
             'photo'       => null,
+            'ai_type'      => null,
+            'ai_couleur'   => null,
+            'ai_etat'      => null,
+            'ai_matiere'   => null,
+            'ai_confiance' => null,
         ];
     }
 }
