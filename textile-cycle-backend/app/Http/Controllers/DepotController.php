@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Depot;
+use App\Services\DepotAnalyzer;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,12 +15,17 @@ class DepotController extends Controller
     private function rules(): array
     {
         return [
-            'categorie'   => 'required|string|min:3|max:100',
-            'quantite'    => 'required|integer|min:1|max:1000',
-            'etat'        => ['required', Rule::in(self::ETATS)],
-            'statut'      => ['nullable', Rule::in(self::STATUTS)],
-            'description' => 'nullable|string|max:1000',
-            'photo'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'categorie'    => 'required|string|min:3|max:100',
+            'quantite'     => 'required|integer|min:1|max:1000',
+            'etat'         => ['required', Rule::in(self::ETATS)],
+            'statut'       => ['nullable', Rule::in(self::STATUTS)],
+            'description'  => 'nullable|string|max:1000',
+            'photo'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'ai_type'      => 'nullable|string|max:100',
+            'ai_couleur'   => 'nullable|string|max:50',
+            'ai_etat'      => 'nullable|string|max:50',
+            'ai_matiere'   => 'nullable|string|max:50',
+            'ai_confiance' => 'nullable|numeric|min:0|max:100',
         ];
     }
 
@@ -38,15 +44,66 @@ class DepotController extends Controller
         ];
     }
 
-    public function index()
-    {
-        $depots = Depot::with('user')->latest()->paginate(10);
-        return view('depots.index', compact('depots'));
+public function index(Request $request)
+{
+    $query = Depot::with('user');
+
+    // Recherche texte : catégorie, description, nom du déposant
+    if ($request->filled('q')) {
+        $q = $request->q;
+        $query->where(function ($sub) use ($q) {
+            $sub->where('categorie', 'like', "%{$q}%")
+                ->orWhere('description', 'like', "%{$q}%")
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+        });
     }
+
+    if ($request->filled('etat')) {
+        $query->where('etat', $request->etat);
+    }
+
+    if ($request->filled('statut')) {
+        $query->where('statut', $request->statut);
+    }
+
+    if ($request->filled('categorie')) {
+        $query->where('categorie', $request->categorie);
+    }
+
+    // Liste des catégories existantes pour le menu déroulant
+    $categories = Depot::select('categorie')->distinct()->orderBy('categorie')->pluck('categorie');
+
+    $depots = $query->latest()->paginate(10)->withQueryString();
+
+    return view('depots.index', [
+        'depots'     => $depots,
+        'categories' => $categories,
+        'etats'      => self::ETATS,
+        'statuts'    => ['en_attente' => 'En attente', 'valide' => 'Validé', 'traite' => 'Traité'],
+    ]);
+}
 
     public function create()
     {
         return view('depots.create');
+    }
+
+    public function analyser(Request $request, DepotAnalyzer $analyzer)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $result = $analyzer->analyze($request->file('photo'));
+
+        if (!$result) {
+            return response()->json(
+                ['message' => 'Service IA indisponible. Remplissez le formulaire manuellement.'],
+                503
+            );
+        }
+
+        return response()->json($result);
     }
 
     public function store(Request $request)

@@ -46,11 +46,35 @@
                     <div class="form-label">Description</div>
                     <p style="margin-bottom:1.5rem">{{ $depot->description }}</p>
                 @endif
+                @if($depot->ai_type)
+    <div class="alert alert-info" style="margin-bottom:1.5rem">
+        <div>
+            <span class="ai-badge">Analyse IA</span>
+            <div style="margin-top:.5rem">
+                Type : <strong>{{ $depot->ai_type }}</strong> ·
+                Couleur : <strong>{{ $depot->ai_couleur }}</strong> ·
+                Matière : <strong>{{ $depot->ai_matiere }}</strong> ·
+                État : <strong>{{ $depot->ai_etat }}</strong> ·
+                Confiance : <strong>{{ $depot->ai_confiance }}%</strong>
+            </div>
+        </div>
+    </div>
+@endif
+<div style="display:flex;gap:.75rem;flex-wrap:wrap">
+    <a href="{{ route('depots.edit', $depot) }}" class="btn btn-primary">Modifier</a>
+    <a href="{{ route('depots.index') }}" class="btn btn-secondary">Retour</a>
 
-                <div style="display:flex;gap:.75rem">
-                    <a href="{{ route('depots.edit', $depot) }}" class="btn btn-primary">Modifier</a>
-                    <a href="{{ route('depots.index') }}" class="btn btn-secondary">Retour</a>
-                </div>
+    <form method="POST" action="{{ route('depots.destroy', $depot) }}"
+          data-confirm
+          data-confirm-type="danger"
+          data-confirm-title="Supprimer le dépôt #{{ $depot->id }} ?"
+          data-confirm-message="Vous allez supprimer définitivement le dépôt #{{ $depot->id }} ({{ $depot->categorie }}). Cette action est irréversible."
+          data-confirm-ok="Oui, supprimer">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+    </form>
+</div>
             </div>
 
             {{-- Colonne droite : photo --}}
