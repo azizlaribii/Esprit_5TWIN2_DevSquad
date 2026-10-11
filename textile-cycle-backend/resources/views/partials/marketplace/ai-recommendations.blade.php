@@ -1,4 +1,4 @@
-﻿{{-- Partial: marketplace/ai-recommendations --}}
+{{-- Partial: marketplace/ai-recommendations --}}
 <div class="ai-section section">
     <div class="ai-section-header">
         <span class="material-icons-round" style="color:var(--primary-light);font-size:1.5rem">auto_awesome</span>
@@ -13,11 +13,7 @@
         <div class="product-card" style="display:flex;flex-direction:column">
             <a href="{{ route('marketplace.show', $reco) }}">
                 <div class="product-img" style="height:120px">
-                    @if($reco->image_url)
-                        <img src="{{ asset('storage/'.$reco->image_url) }}" alt="{{ $reco->titre }}" style="width:100%;height:100%;object-fit:cover">
-                    @else
-                        <span style="font-size:2rem">✨</span>
-                    @endif
+                    <img src="{{ $reco->display_image_url }}" alt="{{ $reco->titre }}" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/images/default-clothing.jpg'">
                 </div>
             </a>
             <div style="padding:.75rem">

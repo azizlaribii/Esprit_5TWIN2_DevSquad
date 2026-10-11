@@ -13,6 +13,7 @@ class ArticleMarketplace extends Model
 
     protected $fillable = [
         'user_id',
+        'acheteur_id',
         'titre',
         'description',
         'categorie',
@@ -33,7 +34,7 @@ class ArticleMarketplace extends Model
         'vues',
     ];
 
-    protected $appends = ['is_favori'];
+    protected $appends = ['is_favori', 'display_image_url'];
 
     // Convert any legacy 'don' type to 'vente'
     public function getTypeAttribute($value)
@@ -41,10 +42,36 @@ class ArticleMarketplace extends Model
         return ($value === 'don') ? 'vente' : $value;
     }
 
+    /**
+     * Accesseur d'URL d'image pour toujours afficher une vraie image et jamais d'icône
+     */
+    public function getDisplayImageUrlAttribute(): string
+    {
+        if (!$this->image_url) {
+            return asset('images/default-clothing.jpg');
+        }
+
+        if (\Illuminate\Support\Str::startsWith($this->image_url, ['http://', 'https://'])) {
+            return $this->image_url;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($this->image_url, 'storage/')) {
+            return asset($this->image_url);
+        }
+
+        return asset('storage/' . $this->image_url);
+    }
+
     // Relation: le vendeur (User)
     public function vendeur()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relation: l'acheteur (User)
+    public function acheteur()
+    {
+        return $this->belongsTo(User::class, 'acheteur_id');
     }
 
     // Relation: les favoris

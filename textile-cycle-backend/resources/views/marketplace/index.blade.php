@@ -248,11 +248,7 @@
                             {{-- Image --}}
                             <a href="{{ route('marketplace.show', $article) }}">
                                 <div class="product-img">
-                                    @if($article->image_url)
-                                        <img src="{{ asset('storage/'.$article->image_url) }}" alt="{{ $article->titre }}" style="width:100%;height:100%;object-fit:cover">
-                                    @else
-                                        <span style="font-size:3rem">{{ ['👕','👗','👖','🧥','👟','🎽','🧢'][array_rand(['👕','👗','👖','🧥','👟','🎽','🧢'])] }}</span>
-                                    @endif
+                                    <img src="{{ $article->display_image_url }}" alt="{{ $article->titre }}" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/images/default-clothing.jpg'">
                                 </div>
                             </a>
 

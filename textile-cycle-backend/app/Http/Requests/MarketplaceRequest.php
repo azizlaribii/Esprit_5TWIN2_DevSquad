@@ -22,8 +22,8 @@ class MarketplaceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'titre'          => 'required|string|min:5|max:120',
-            'description'    => 'required|string|min:20|max:2000',
+            'titre'          => 'required|string|min:3|max:120',
+            'description'    => 'required|string|min:5|max:2000',
             'categorie'      => 'required|string|max:80',
             'marque'         => 'nullable|string|max:80',
             'taille'         => 'required|string|max:10',
@@ -33,6 +33,10 @@ class MarketplaceRequest extends FormRequest
             'prix'           => 'nullable|numeric|min:0|max:9999',
             'article_echange'=> 'nullable|string|max:150',
             'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'armoire_image'  => 'nullable|string',
+            'armoire_vetement_id' => 'nullable|integer',
+            'image_url_input'=> 'nullable|string|max:500',
+            'image_url'      => 'nullable|string|max:500',
         ];
     }
 

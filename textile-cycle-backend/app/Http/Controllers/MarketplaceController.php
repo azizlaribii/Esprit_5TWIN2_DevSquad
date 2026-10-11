@@ -272,34 +272,52 @@ class MarketplaceController extends Controller
     }
 
     // ══════════════════════════════════════════════════════
-    // DEMANDE D'ACHAT – Faire une demande
+    // DEMANDE D'ACHAT – Acheter un article
     // ══════════════════════════════════════════════════════
     public function demandeAchat(Request $request, ArticleMarketplace $article)
     {
-        $acheteurId = Auth::id() ?? 2;
+        $acheteurId = Auth::id() ?? 1;
 
         // Vérifier que l'utilisateur n'est pas le vendeur
-        if ($acheteurId === $article->user_id) {
+        if (Auth::check() && $acheteurId === $article->user_id) {
             return back()->with('error', 'Vous ne pouvez pas acheter votre propre article.');
         }
 
-        // Vérifier doublon
-        $existing = DemandeMarketplace::where('article_id', $article->id)
-            ->where('acheteur_id', $acheteurId)
-            ->first();
+        // Marquer l'article comme vendu et assigner l'acheteur
+        $article->update([
+            'statut'      => 'vendu',
+            'acheteur_id' => $acheteurId,
+        ]);
 
-        if (!$existing) {
-            DemandeMarketplace::create([
-                'article_id' => $article->id,
-                'acheteur_id' => $acheteurId,
-                'statut' => 'en_attente',
-                'message' => $request->message,
+        // Enregistrer la demande d'achat validée
+        DemandeMarketplace::create([
+            'article_id'  => $article->id,
+            'acheteur_id' => $acheteurId,
+            'statut'      => 'acceptee',
+            'message'     => $request->message ?? 'Achat confirmé',
+        ]);
+
+        // Ajouter automatiquement le vêtement dans le dressing / armoire de l'acheteur
+        try {
+            \App\Models\VetementArmoire::create([
+                'user_id'     => $acheteurId,
+                'titre'       => $article->titre,
+                'image_path'  => $article->image_url,
+                'dossier'     => $article->categorie ?? 'Articles achetés',
+                'categorie'   => $article->categorie,
+                'marque'      => $article->marque,
+                'taille'      => $article->taille,
+                'genre'       => $article->genre,
+                'etat'        => $article->etat,
+                'description' => $article->description,
             ]);
-            // Mettre à jour le statut de l'article
-            $article->update(['statut' => 'en_cours']);
+        } catch (\Exception $e) {
+            // Ignorer si la table n'est pas disponible ou erreur non bloquante
         }
 
-        return back()->with('success', '🛒 Demande envoyée au vendeur avec succès !');
+        return redirect()
+            ->route('marketplace.mes-articles', ['tab' => 'achats'])
+            ->with('success', '🎉 Félicitations ! Votre achat a été validé. Retrouvez votre article dans vos achats ci-dessous.');
     }
 
     // ══════════════════════════════════════════════════════
@@ -342,7 +360,7 @@ class MarketplaceController extends Controller
     }
 
     // ══════════════════════════════════════════════════════
-    // MES ARTICLES – Table de gestion de l'utilisateur
+    // MES ARTICLES – Table de gestion de l'utilisateur (Ventes & Achats)
     // ══════════════════════════════════════════════════════
     public function mesArticles(Request $request)
     {
@@ -354,28 +372,41 @@ class MarketplaceController extends Controller
             'prix' => \Illuminate\Support\Facades\DB::raw('COALESCE(prix, ai_prix_min, 15.00)')
         ]);
 
-        $query = ArticleMarketplace::where('user_id', $userId)->latest();
+        $activeTab = $request->get('tab', 'ventes'); // 'ventes' ou 'achats'
 
-        // Filtre statut
+        // 1. Articles mis en vente par l'utilisateur
+        $queryVentes = ArticleMarketplace::with(['vendeur', 'acheteur'])
+            ->where('user_id', $userId)
+            ->latest();
+
         if ($request->statut) {
-            $query->where('statut', $request->statut);
+            $queryVentes->where('statut', $request->statut);
         }
 
-        // Filtre type
         if ($request->type) {
-            $query->where('type', $request->type);
+            $queryVentes->where('type', $request->type);
         }
 
-        $articles = $query->paginate(15);
+        $articles = $queryVentes->paginate(15, ['*'], 'page_ventes');
 
+        // 2. Articles achetés par l'utilisateur
+        $queryAchats = ArticleMarketplace::with(['vendeur', 'acheteur'])
+            ->where('acheteur_id', $userId)
+            ->latest('updated_at');
+
+        $articlesAchetes = $queryAchats->paginate(15, ['*'], 'page_achats');
+
+        // Statistiques globales de l'utilisateur
         $stats = [
-            'total'      => ArticleMarketplace::where('user_id', $userId)->count(),
-            'disponible' => ArticleMarketplace::where('user_id', $userId)->where('statut', 'disponible')->count(),
-            'vendu'      => ArticleMarketplace::where('user_id', $userId)->where('statut', 'vendu')->count(),
-            'en_cours'   => ArticleMarketplace::where('user_id', $userId)->where('statut', 'en_cours')->count(),
+            'total'       => ArticleMarketplace::where('user_id', $userId)->count(),
+            'disponible'  => ArticleMarketplace::where('user_id', $userId)->where('statut', 'disponible')->count(),
+            'vendu'       => ArticleMarketplace::where('user_id', $userId)->where('statut', 'vendu')->count(),
+            'en_cours'    => ArticleMarketplace::where('user_id', $userId)->where('statut', 'en_cours')->count(),
+            'mes_achats'  => ArticleMarketplace::where('acheteur_id', $userId)->count(),
+            'total_depense' => ArticleMarketplace::where('acheteur_id', $userId)->sum('prix') ?? 0,
         ];
 
-        return view('marketplace.mes-articles', compact('articles', 'stats'));
+        return view('marketplace.mes-articles', compact('articles', 'articlesAchetes', 'stats', 'activeTab'));
     }
 
     // ══════════════════════════════════════════════════════

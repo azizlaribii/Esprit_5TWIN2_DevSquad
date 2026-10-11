@@ -24,10 +24,8 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem">
             @foreach($favoris as $f)
                 <div class="card" style="overflow:hidden;padding:0">
-                    <div style="height:160px;background:rgba(108,99,255,.1);display:flex;align-items:center;justify-content:center;font-size:3rem">
-                        @if($f->article->image_url)
-                            <img src="{{ asset('storage/'.$f->article->image_url) }}" style="width:100%;height:100%;object-fit:cover" alt="{{ $f->article->titre }}">
-                        @else 👕 @endif
+                    <div style="height:160px;background:rgba(108,99,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                        <img src="{{ $f->article->display_image_url }}" style="width:100%;height:100%;object-fit:cover" alt="{{ $f->article->titre }}" onerror="this.src='/images/default-clothing.jpg'">
                     </div>
                     <div style="padding:1rem">
                         <div style="font-weight:700;color:var(--text-primary);margin-bottom:.25rem">{{ $f->article->titre }}</div>

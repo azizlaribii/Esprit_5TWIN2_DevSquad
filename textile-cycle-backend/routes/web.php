@@ -5,6 +5,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\DashboardViewController;
 use App\Http\Controllers\AssociationController;
 use App\Http\Controllers\DepotController;
+use App\Http\Controllers\ArmoireController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,12 @@ Route::post('/marketplace/{article}/evaluer',     [MarketplaceController::class,
 Route::resource('marketplace', MarketplaceController::class)->parameters([
     'marketplace' => 'article'
 ]);
+
+// ── Section Armoire (Dressing personnel)
+Route::get('/armoire',                            [ArmoireController::class, 'index'])->name('armoire.index');
+Route::post('/armoire',                           [ArmoireController::class, 'store'])->name('armoire.store');
+Route::patch('/armoire/{vetement}/dossier',       [ArmoireController::class, 'updateDossier'])->name('armoire.update-dossier');
+Route::delete('/armoire/{vetement}',              [ArmoireController::class, 'destroy'])->name('armoire.destroy');
 require __DIR__.'/don.php';
 require __DIR__.'/reparation.php';
 require __DIR__.'/upcycling.php';
