@@ -40,6 +40,12 @@ class User extends Authenticatable
         return $this->hasMany(ArticleMarketplace::class);
     }
 
+    // Armoire personnelle (1-N : vêtements déposés dans le dressing)
+    public function vetementsArmoire()
+    {
+        return $this->hasMany(VetementArmoire::class);
+    }
+
     // N-N : un utilisateur a plusieurs favoris via la table pivot
     public function favorisMarketplace()
     {

@@ -43,27 +43,107 @@
             {{-- ─── FORM LEFT ─── --}}
             <div>
                 {{-- Image Upload --}}
+                {{-- Image Upload / Armoire Selection --}}
                 <div class="card section">
-                    <div class="card-header">
+                    <div class="card-header" style="flex-wrap:wrap;gap:.5rem">
                         <div class="card-title">
                             <span class="material-icons-round" style="color:var(--primary);font-size:1.1rem">add_photo_alternate</span>
                             Photos du vêtement
                         </div>
+                        {{-- Tabs switcher --}}
+                        <div style="display:flex;gap:.35rem;background:rgba(255,255,255,.05);padding:.25rem;border-radius:var(--radius-sm);border:1px solid var(--border)">
+                            <button type="button" class="btn btn-sm" id="tab-btn-device"
+                                    style="background:var(--primary);color:white;padding:.3rem .75rem;font-size:.78rem;border-radius:var(--radius-xs);border:none;cursor:pointer"
+                                    onclick="switchPhotoTab('device')">
+                                <span class="material-icons-round" style="font-size:.9rem">upload_file</span> Mon Appareil
+                            </button>
+                            <button type="button" class="btn btn-sm" id="tab-btn-armoire"
+                                    style="background:transparent;color:var(--text-secondary);padding:.3rem .75rem;font-size:.78rem;border-radius:var(--radius-xs);border:none;cursor:pointer"
+                                    onclick="switchPhotoTab('armoire')">
+                                <span class="material-icons-round" style="font-size:.9rem">checkroom</span> Mon Armoire ({{ isset($armoireItems) ? $armoireItems->count() : 0 }})
+                            </button>
+                        </div>
                     </div>
-                    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('image-input').click()">
-                        <span class="material-icons-round">cloud_upload</span>
-                        <div style="margin-top:.75rem;font-weight:600;color:var(--text-secondary)">Cliquez ou glissez une photo</div>
-                        <div style="font-size:.8rem;color:var(--text-muted);margin-top:.35rem">JPG, PNG, WebP — max 5 MB</div>
-                        @if(isset($article) && $article->image_url)
-                            <img src="{{ asset('storage/'.$article->image_url) }}" style="max-height:150px;margin-top:1rem;border-radius:var(--radius-md)" alt="aperçu">
+
+                    {{-- Hidden inputs for armoire selection --}}
+                    <input type="hidden" name="armoire_image" id="armoire_image_input" value="{{ old('armoire_image') }}">
+                    <input type="hidden" name="armoire_vetement_id" id="armoire_vetement_id_input" value="{{ old('armoire_vetement_id') }}">
+
+                    {{-- TAB 1: File upload from device --}}
+                    <div id="pane-device" style="display:block">
+                        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('image-input').click()">
+                            <span class="material-icons-round">cloud_upload</span>
+                            <div style="margin-top:.75rem;font-weight:600;color:var(--text-secondary)">Cliquez ou glissez une nouvelle photo</div>
+                            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.35rem">JPG, PNG, WebP — max 5 MB</div>
+                            @if(isset($article) && $article->image_url)
+                                <div style="margin-top:1rem">
+                                    <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.35rem">Image actuelle :</div>
+                                    <img src="{{ $article->display_image_url }}" style="max-height:150px;border-radius:var(--radius-md)" alt="actuelle">
+                                </div>
+                            @endif
+                            <div id="image-preview" style="margin-top:1rem"></div>
+                        </div>
+                        <input type="file" name="image" id="image-input" accept="image/*" style="display:none" onchange="previewImage(this)">
+                        @error('image') <div class="form-error"><span class="material-icons-round" style="font-size:.9rem">error</span> {{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- TAB 2: Select from Armoire --}}
+                    <div id="pane-armoire" style="display:none">
+                        @if(isset($armoireItems) && $armoireItems->count() > 0)
+                            <div style="margin-bottom:.5rem;font-size:.82rem;color:var(--text-secondary);display:flex;align-items:center;justify-content:space-between">
+                                <span>Sélectionnez un vêtement depuis votre <strong>Armoire</strong> :</span>
+                                <a href="{{ route('armoire.index') }}" target="_blank" style="color:var(--primary-light);font-size:.78rem;text-decoration:none">
+                                    + Gérer mon Armoire ↗
+                                </a>
+                            </div>
+
+                            {{-- Folder filter pills --}}
+                            <div style="display:flex;gap:.35rem;overflow-x:auto;padding-bottom:.4rem;margin-bottom:.65rem">
+                                <button type="button" class="btn btn-secondary btn-sm armoire-folder-pill active" style="font-size:.72rem;padding:.2rem .55rem" onclick="filterArmoireByFolder('all', this)">Tous</button>
+                                <button type="button" class="btn btn-secondary btn-sm armoire-folder-pill" style="font-size:.72rem;padding:.2rem .55rem" onclick="filterArmoireByFolder('T-shirt', this)">👕 T-shirts</button>
+                                <button type="button" class="btn btn-secondary btn-sm armoire-folder-pill" style="font-size:.72rem;padding:.2rem .55rem" onclick="filterArmoireByFolder('Pantalon', this)">👖 Pantalons</button>
+                                <button type="button" class="btn btn-secondary btn-sm armoire-folder-pill" style="font-size:.72rem;padding:.2rem .55rem" onclick="filterArmoireByFolder('Chaussures', this)">👟 Chaussures</button>
+                                <button type="button" class="btn btn-secondary btn-sm armoire-folder-pill" style="font-size:.72rem;padding:.2rem .55rem" onclick="filterArmoireByFolder('Chaussettes', this)">🧦 Chaussettes</button>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:.75rem;max-height:280px;overflow-y:auto;padding:.25rem" id="armoire-picker-grid">
+                                @foreach($armoireItems as $item)
+                                    <div class="armoire-select-card"
+                                         id="armoire-card-{{ $item->id }}"
+                                         data-dossier="{{ $item->dossier ?? 'T-shirt' }}"
+                                         onclick="selectArmoireItem({{ $item->id }}, '{{ addslashes($item->image_path) }}', '{{ addslashes($item->display_image_url) }}', '{{ addslashes($item->titre) }}')"
+                                         style="border:2px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,.02);cursor:pointer;transition:var(--transition);position:relative">
+                                        <div style="height:100px;background:rgba(0,0,0,.2);overflow:hidden;position:relative">
+                                            <img src="{{ $item->display_image_url }}" alt="{{ $item->titre }}" style="width:100%;height:100%;object-fit:cover">
+                                            <span class="armoire-badge-check" style="position:absolute;top:4px;right:4px;background:var(--primary);color:white;border-radius:50%;width:20px;height:20px;display:none;align-items:center;justify-content:center;font-size:.75rem">✓</span>
+                                            <span style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.7);font-size:.65rem;padding:.1rem .35rem;border-radius:4px;color:white">
+                                                {{ $item->dossier_icon }} {{ $item->dossier ?? 'T-shirt' }}
+                                            </span>
+                                        </div>
+                                        <div style="padding:.45rem;font-size:.75rem">
+                                            <div style="font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $item->titre }}</div>
+                                            <div style="color:var(--text-muted);font-size:.7rem">{{ $item->categorie ?? 'Vêtement' }} • {{ $item->taille ?? '-' }}</div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.02);border-radius:var(--radius-md);border:1px dashed var(--border)">
+                                <span class="material-icons-round" style="font-size:2rem;color:var(--text-muted)">checkroom</span>
+                                <p style="font-size:.85rem;color:var(--text-secondary);margin:.5rem 0">Votre armoire ne contient pas encore de photos.</p>
+                                <a href="{{ route('armoire.index') }}" class="btn btn-secondary btn-sm" style="display:inline-flex">
+                                    <span class="material-icons-round" style="font-size:.9rem">add_photo_alternate</span> Déposer des photos dans mon Armoire
+                                </a>
+                            </div>
                         @endif
-                        <div id="image-preview" style="margin-top:1rem"></div>
+                        <div id="armoire-selected-notice" style="margin-top:.75rem;padding:.5rem .75rem;border-radius:var(--radius-sm);background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.3);display:none;font-size:.8rem;color:var(--primary-light)">
+                            👗 Photo de l'Armoire sélectionnée : <strong id="armoire-selected-name"></strong>
+                        </div>
                     </div>
-                    <input type="file" name="image" id="image-input" accept="image/*" style="display:none" onchange="previewImage(this)">
-                    @error('image') <div class="form-error"><span class="material-icons-round" style="font-size:.9rem">error</span> {{ $message }}</div> @enderror
+
                     <p style="font-size:.78rem;color:var(--text-muted);margin-top:.75rem;display:flex;align-items:center;gap:.35rem">
                         <span class="material-icons-round" style="font-size:.9rem">auto_awesome</span>
-                        <strong style="color:var(--primary-light)">IA :</strong> L'IA identifiera automatiquement le type, couleur et état du vêtement
+                        <strong style="color:var(--primary-light)">IA :</strong> L'IA analysera automatiquement la photo du vêtement
                     </p>
                 </div>
 
@@ -280,6 +360,86 @@
 
 @section('scripts')
 <script>
+function switchPhotoTab(tab) {
+    const paneDevice = document.getElementById('pane-device');
+    const paneArmoire = document.getElementById('pane-armoire');
+    const btnDevice = document.getElementById('tab-btn-device');
+    const btnArmoire = document.getElementById('tab-btn-armoire');
+
+    if (tab === 'device') {
+        paneDevice.style.display = 'block';
+        paneArmoire.style.display = 'none';
+        btnDevice.style.background = 'var(--primary)';
+        btnDevice.style.color = 'white';
+        btnArmoire.style.background = 'transparent';
+        btnArmoire.style.color = 'var(--text-secondary)';
+        document.getElementById('armoire_image_input').value = '';
+        document.getElementById('armoire_vetement_id_input').value = '';
+        document.getElementById('armoire-selected-notice').style.display = 'none';
+        document.querySelectorAll('.armoire-select-card').forEach(c => {
+            c.style.borderColor = 'var(--border)';
+            const check = c.querySelector('.armoire-badge-check');
+            if (check) check.style.display = 'none';
+        });
+    } else {
+        paneDevice.style.display = 'none';
+        paneArmoire.style.display = 'block';
+        btnArmoire.style.background = 'var(--primary)';
+        btnArmoire.style.color = 'white';
+        btnDevice.style.background = 'transparent';
+        btnDevice.style.color = 'var(--text-secondary)';
+        const fileInput = document.getElementById('image-input');
+        if (fileInput) fileInput.value = '';
+        const preview = document.getElementById('image-preview');
+        if (preview) preview.innerHTML = '';
+    }
+}
+
+function filterArmoireByFolder(folder, btn) {
+    document.querySelectorAll('.armoire-folder-pill').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,.05)';
+        b.style.borderColor = 'var(--border)';
+        b.style.color = 'var(--text-secondary)';
+    });
+    btn.classList.add('active');
+    btn.style.background = 'var(--primary)';
+    btn.style.borderColor = 'var(--primary)';
+    btn.style.color = 'white';
+
+    document.querySelectorAll('.armoire-select-card').forEach(card => {
+        const itemDossier = card.dataset.dossier;
+        if (folder === 'all' || itemDossier === folder) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function selectArmoireItem(id, imagePath, imageUrl, titre) {
+    document.querySelectorAll('.armoire-select-card').forEach(c => {
+        c.style.borderColor = 'var(--border)';
+        const check = c.querySelector('.armoire-badge-check');
+        if (check) check.style.display = 'none';
+    });
+
+    const card = document.getElementById('armoire-card-' + id);
+    if (card) {
+        card.style.borderColor = 'var(--primary)';
+        const check = card.querySelector('.armoire-badge-check');
+        if (check) check.style.display = 'flex';
+    }
+
+    document.getElementById('armoire_image_input').value = imagePath;
+    document.getElementById('armoire_vetement_id_input').value = id;
+
+    const notice = document.getElementById('armoire-selected-notice');
+    const nameSpan = document.getElementById('armoire-selected-name');
+    nameSpan.innerText = titre || 'Vêtement sélectionné';
+    notice.style.display = 'block';
+}
+
 function previewImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();

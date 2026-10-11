@@ -38,11 +38,7 @@
         <div>
             {{-- Image --}}
             <div class="main-image">
-                @if($article->image_url)
-                    <img src="{{ asset('storage/'.$article->image_url) }}" alt="{{ $article->titre }}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)">
-                @else
-                    <span>{{ ['👕','👗','👖','🧥','👟'][0] }}</span>
-                @endif
+                <img src="{{ $article->display_image_url }}" alt="{{ $article->titre }}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)" onerror="this.src='/images/default-clothing.jpg'">
             </div>
 
             {{-- IA Analysis Card --}}
@@ -103,7 +99,9 @@
                 <div style="display:flex;flex-direction:column;gap:.5rem">
                     @foreach($similar->take(4) as $sim)
                         <a href="{{ route('marketplace.show', $sim) }}" class="similar-item">
-                            <div style="width:44px;height:44px;border-radius:var(--radius-sm);background:rgba(108,99,255,.1);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">👕</div>
+                            <div style="width:48px;height:48px;border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
+                                <img src="{{ $sim->display_image_url }}" alt="{{ $sim->titre }}" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/images/default-clothing.jpg'">
+                            </div>
                             <div style="flex:1;min-width:0">
                                 <div style="font-weight:600;color:var(--text-primary);font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $sim->titre }}</div>
                                 <div style="font-size:.78rem;color:var(--text-muted)">{{ $sim->taille }} • {{ $sim->etat }}</div>
@@ -160,19 +158,52 @@
                     <span class="badge badge-success" style="font-size:.7rem">Vérifié ✓</span>
                 </div>
 
-                {{-- CTA Buttons --}}
+                {{-- CTA Buttons & Logique d'Achat --}}
+                @php
+                    $isOwner = Auth::check() ? (Auth::id() === $article->user_id) : ($article->user_id === 1);
+                @endphp
+
                 @if($article->statut === 'disponible')
-                    <form method="POST" action="{{ route('marketplace.demande', $article) }}" style="margin-bottom:.75rem">
-                        @csrf
-                        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.875rem" id="btn-buy-request">
-                            <span class="material-icons-round">{{ $article->type == 'echange' ? 'swap_horiz' : 'shopping_cart' }}</span>
-                            {{ $article->type == 'echange' ? 'Proposer un échange' : 'Faire une demande d\'achat' }}
-                        </button>
-                    </form>
+                    @if($isOwner)
+                        {{-- Le propriétaire ne peut pas acheter son propre produit --}}
+                        <div style="background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.3);border-radius:var(--radius-md);padding:.85rem;margin-bottom:.75rem">
+                            <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+                                <span class="material-icons-round" style="color:var(--primary-light);font-size:1.15rem">verified_user</span>
+                                <strong style="color:var(--text-primary);font-size:.85rem">Votre propre produit</strong>
+                            </div>
+                            <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.4">
+                                Vous êtes le vendeur de cet article. Vous ne pouvez pas acheter votre propre produit. Les autres utilisateurs peuvent l'acheter.
+                            </div>
+                        </div>
+                        <a href="{{ route('marketplace.edit', $article) }}" class="btn btn-secondary" style="width:100%;justify-content:center;margin-bottom:.75rem">
+                            <span class="material-icons-round">edit</span> Modifier mon annonce
+                        </a>
+                    @else
+                        {{-- Les autres utilisateurs peuvent acheter le produit --}}
+                        <form method="POST" action="{{ route('marketplace.demande', $article) }}" style="margin-bottom:.75rem">
+                            @csrf
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.875rem" id="btn-buy-request">
+                                <span class="material-icons-round">{{ $article->type == 'echange' ? 'swap_horiz' : 'shopping_cart' }}</span>
+                                {{ $article->type == 'echange' ? 'Proposer un échange' : 'Acheter ce vêtement (' . number_format($article->prix ?? 15, 2) . ' DT)' }}
+                            </button>
+                        </form>
+                    @endif
+                @elseif($article->statut === 'vendu')
+                    <div class="alert alert-warning" style="margin-bottom:.75rem;background:rgba(255,101,132,.12);border-color:rgba(255,101,132,.35)">
+                        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem">
+                            <span class="material-icons-round" style="color:var(--accent-red);font-size:1.2rem">sell</span>
+                            <strong style="color:var(--accent-red);font-size:.9rem">Article Vendu 💰</strong>
+                        </div>
+                        @if($article->acheteur)
+                            <div style="font-size:.8rem;color:var(--text-primary);margin-top:.2rem">
+                                Acheté par : <strong>{{ $article->acheteur->name }}</strong>
+                            </div>
+                        @endif
+                    </div>
                 @else
                     <div class="alert alert-warning" style="margin-bottom:.75rem">
                         <span class="material-icons-round">info</span>
-                        Cet article n'est plus disponible
+                        Cet article n'est plus disponible ({{ ucfirst($article->statut) }})
                     </div>
                 @endif
 

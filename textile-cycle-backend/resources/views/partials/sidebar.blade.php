@@ -24,6 +24,11 @@
             <span class="nav-icon material-icons-round">inventory_2</span>
             <span class="nav-label">Mes Articles</span>
         </a>
+        <a href="/armoire" class="nav-item {{ request()->is('armoire*') ? 'active' : '' }}">
+            <span class="nav-icon material-icons-round">checkroom</span>
+            <span class="nav-label">Mon Armoire</span>
+            <span class="nav-badge" style="background:#FF6584">Dressing</span>
+        </a>
         <a href="/statistiques" class="nav-item {{ request()->is('statistiques*') ? 'active' : '' }}">
             <span class="nav-icon material-icons-round">bar_chart</span>
             <span class="nav-label">Statistiques</span>
