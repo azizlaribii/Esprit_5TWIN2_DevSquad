@@ -7,8 +7,8 @@
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
+            background: #F8FAFC;
+            color: #0F172A;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -17,18 +17,19 @@
         }
         .container {
             text-align: center;
-            padding: 2rem;
-            background: rgba(30, 41, 59, 0.8);
+            padding: 2.5rem 3rem;
+            background: #FFFFFF;
             border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
         }
-        h1 { color: #6366f1; margin-bottom: 0.5rem; }
-        p { color: #94a3b8; }
+        h1 { color: #5B52E0; margin-bottom: 0.5rem; }
+        p { color: #64748B; }
         .badge {
             display: inline-block;
-            background: rgba(99, 102, 241, 0.2);
-            color: #818cf8;
+            background: #EEF2FF;
+            color: #5B52E0;
+            border: 1px solid #C7D2FE;
             padding: 0.5rem 1rem;
             border-radius: 9999px;
             font-weight: 600;
@@ -41,7 +42,7 @@
     <div class="container">
         <h1>🌱 TexTileCycle API Backend</h1>
         <p>API Laravel 11 pour l'économie circulaire textile</p>
-        <div class="badge">Status: Operationnel • Endpoints API sous /api</div>
+        <div class="badge">Status : Opérationnel • Endpoints API sous /api</div>
     </div>
 </body>
 </html>

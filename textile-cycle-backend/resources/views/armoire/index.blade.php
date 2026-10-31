@@ -394,6 +394,18 @@
                         <div class="drop-zone-hint">JPG, PNG, WebP — max 5 Mo</div>
                     </div>
                     <input type="file" name="image" id="armoire-file-input" accept="image/*" style="display:none" required onchange="previewArmoireImage(this)">
+
+                    {{-- AI SCAN BUTTON & STATUS --}}
+                    <div style="margin-bottom:1rem">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-scan-ia-armoire"
+                                style="width:100%;justify-content:center;gap:.45rem;padding:.55rem;font-size:.82rem"
+                                onclick="scanArmoireWithIA()">
+                            <span class="material-icons-round" style="color:var(--primary);font-size:1.1rem">auto_awesome</span>
+                            Scanner la pièce avec l'IA
+                        </button>
+                    </div>
+                    <div id="armoire-ai-status" style="display:none;margin-bottom:1rem;padding:.65rem .85rem;border-radius:var(--radius-sm);background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.25);font-size:.78rem;color:var(--primary);line-height:1.4">
+                    </div>
                     @error('image')
                         <div class="form-error" style="margin-bottom:1rem">
                             <span class="material-icons-round" style="font-size:.9rem">error</span> {{ $message }}
@@ -409,16 +421,16 @@
                         <input type="hidden" name="dossier" id="selected-dossier-input" value="{{ in_array($currentDossier, ['T-shirt','Pantalon','Chaussures','Chaussettes']) ? $currentDossier : 'T-shirt' }}">
 
                         <div class="folder-btn-group">
-                            <button type="button" class="folder-option-btn {{ ($currentDossier === 'T-shirt' || !in_array($currentDossier, ['Pantalon','Chaussures','Chaussettes'])) ? 'selected' : '' }}" onclick="chooseDossier('T-shirt', 'T-Shirts & Tops')">
+                            <button type="button" class="folder-option-btn {{ ($currentDossier === 'T-shirt' || !in_array($currentDossier, ['Pantalon','Chaussures','Chaussettes'])) ? 'selected' : '' }}" onclick="chooseDossier('T-shirt', 'T-Shirts & Tops', this)">
                                 <span style="font-size:1.15rem">👕</span> T-shirt
                             </button>
-                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Pantalon' ? 'selected' : '' }}" onclick="chooseDossier('Pantalon', 'Jeans & Pantalons')">
+                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Pantalon' ? 'selected' : '' }}" onclick="chooseDossier('Pantalon', 'Jeans & Pantalons', this)">
                                 <span style="font-size:1.15rem">👖</span> Pantalon
                             </button>
-                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Chaussures' ? 'selected' : '' }}" onclick="chooseDossier('Chaussures', 'Chaussures')">
+                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Chaussures' ? 'selected' : '' }}" onclick="chooseDossier('Chaussures', 'Chaussures', this)">
                                 <span style="font-size:1.15rem">👟</span> Chaussures
                             </button>
-                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Chaussettes' ? 'selected' : '' }}" onclick="chooseDossier('Chaussettes', 'Accessoires')">
+                            <button type="button" class="folder-option-btn {{ $currentDossier === 'Chaussettes' ? 'selected' : '' }}" onclick="chooseDossier('Chaussettes', 'Accessoires', this)">
                                 <span style="font-size:1.15rem">🧦</span> Chaussettes
                             </button>
                         </div>
@@ -628,13 +640,24 @@
 
 @section('scripts')
 <script>
-function chooseDossier(dossierName, defaultCat) {
-    document.getElementById('selected-dossier-input').value = dossierName;
-    document.getElementById('nouveau-dossier-input').value = '';
+function chooseDossier(dossierName, defaultCat, clickedEl = null) {
+    const sel = document.getElementById('selected-dossier-input');
+    if (sel) sel.value = dossierName;
+    const nouv = document.getElementById('nouveau-dossier-input');
+    if (nouv) nouv.value = '';
 
     // Highlight button
-    document.querySelectorAll('.folder-option-btn').forEach(btn => btn.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    document.querySelectorAll('.folder-option-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        // If matches folder name, select it
+        if (btn.innerText && btn.innerText.toLowerCase().includes(dossierName.toLowerCase())) {
+            btn.classList.add('selected');
+        }
+    });
+
+    if (clickedEl && clickedEl.classList) {
+        clickedEl.classList.add('selected');
+    }
 
     // Auto-select category
     if (defaultCat) {
@@ -653,6 +676,138 @@ function chooseDossier(dossierName, defaultCat) {
 function handleCustomDossier(input) {
     if (input.value && input.value.trim() !== '') {
         document.querySelectorAll('.folder-option-btn').forEach(btn => btn.classList.remove('selected'));
+    }
+}
+
+async function scanArmoireWithIA() {
+    const fileInput = document.getElementById('armoire-file-input');
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        fileInput.click();
+        return;
+    }
+
+    const btn = document.getElementById('btn-scan-ia-armoire');
+    const status = document.getElementById('armoire-ai-status');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-icons-round" style="font-size:1rem;vertical-align:middle">hourglass_top</span> Analyse CLIP IA en cours...';
+    btn.disabled = true;
+
+    status.style.display = 'block';
+    status.style.background = 'rgba(108,99,255,.08)';
+    status.style.borderColor = 'rgba(108,99,255,.25)';
+    status.style.color = 'var(--primary)';
+    status.innerHTML = '🤖 <strong>Diagnostic IA :</strong> Classification du textile par modèle CLIP zero-shot...';
+
+    const formData = new FormData();
+    formData.append('image', fileInput.files[0]);
+
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+        const res = await fetch('{{ route("armoire.analyser-ia") }}', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf ?? ''
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || ('Erreur HTTP ' + res.status));
+        }
+
+        const data = await res.json();
+
+        // 1. Détection de photo non-vêtement (chat, chien, animal, paysage, objet, visage...)
+        if (data.is_garment === false || data.verdict === 'non_vetement') {
+            status.innerHTML = `🚫 <strong>Non reconnu :</strong> ${data.message || "Cette photo n'est pas une pièce de vêtement."} (Confiance : ${data.confiance}%)<br><span style="font-size:.78rem;opacity:.95">Veuillez téléverser la photo d'un vêtement ou d'une paire de chaussures valide.</span>`;
+            status.style.background = 'rgba(255,101,132,.12)';
+            status.style.borderColor = 'rgba(255,101,132,.45)';
+            status.style.color = '#e11d48';
+            return;
+        }
+
+        // 2. Vêtement identifié avec succès
+        if (data.dossier_suggere || data.nouveau_dossier) {
+            const isCustom = data.is_custom_dossier || !['T-shirt', 'Pantalon', 'Chaussures', 'Chaussettes'].includes(data.dossier_suggere);
+
+            if (isCustom) {
+                // Désélectionner les 4 boutons prédéfinis
+                document.querySelectorAll('.folder-option-btn').forEach(btn => btn.classList.remove('selected'));
+
+                // Vider l'input caché pour que le nouveau dossier soit utilisé à l'enregistrement
+                const selInput = document.getElementById('selected-dossier-input');
+                if (selInput) selInput.value = '';
+
+                // Remplir et mettre en surbrillance l'input "nouveau_dossier" avec la suggestion de l'IA
+                const nouvInput = document.getElementById('nouveau-dossier-input');
+                const folderName = data.nouveau_dossier || data.dossier_suggere;
+                if (nouvInput) {
+                    nouvInput.value = folderName;
+                    nouvInput.style.borderColor = 'var(--primary)';
+                    nouvInput.style.boxShadow = '0 0 0 3px rgba(108,99,255,.25)';
+                }
+            } else {
+                chooseDossier(data.dossier_suggere, data.type);
+            }
+
+            // Sélectionner ou ajouter dynamiquement la catégorie suggérée
+            const catSelect = document.getElementById('armoire-categorie');
+            const targetCat = data.categorie || data.type;
+            if (catSelect && targetCat) {
+                let matched = false;
+                for (let i = 0; i < catSelect.options.length; i++) {
+                    if (catSelect.options[i].value.toLowerCase() === targetCat.toLowerCase()) {
+                        catSelect.selectedIndex = i;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    const opt = document.createElement('option');
+                    opt.value = targetCat;
+                    opt.innerText = targetCat;
+                    opt.selected = true;
+                    catSelect.appendChild(opt);
+                }
+            }
+
+            if (data.titre_suggere) {
+                const titreEl = document.getElementById('armoire-titre');
+                if (titreEl) titreEl.value = data.titre_suggere;
+            }
+
+            if (data.etat) {
+                const etatSelect = document.getElementById('armoire-etat');
+                if (etatSelect) {
+                    for (let i = 0; i < etatSelect.options.length; i++) {
+                        if (etatSelect.options[i].value === data.etat) {
+                            etatSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const folderBadge = isCustom
+                ? `<span class="badge" style="background:var(--primary);color:#fff;padding:3px 9px;border-radius:4px;font-weight:700">+ Nouveau dossier : ${data.nouveau_dossier || data.dossier_suggere}</span>`
+                : `Dossier <strong>${data.dossier_suggere}</strong>`;
+
+            status.innerHTML = `✨ <strong>Reconnu par l'IA :</strong> ${data.titre_suggere} (${data.confiance}%) &bull; ${folderBadge} &bull; Catégorie : <strong>${targetCat}</strong>`;
+            status.style.background = 'rgba(67,217,173,.12)';
+            status.style.borderColor = 'rgba(67,217,173,.5)';
+            status.style.color = '#059669';
+        }
+    } catch (err) {
+        console.error("Erreur scan IA armoire:", err);
+        status.innerHTML = '⚠️ Service IA temporairement inaccessible (' + (err.message || 'erreur réseau') + '). Vous pouvez remplir les champs manuellement.';
+        status.style.background = 'rgba(255,101,132,.1)';
+        status.style.borderColor = 'rgba(255,101,132,.3)';
+        status.style.color = 'var(--accent-orange)';
+    } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
     }
 }
 

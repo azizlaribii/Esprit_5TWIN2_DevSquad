@@ -20,6 +20,10 @@ class DashboardViewController extends Controller
      */
     public function dashboard()
     {
+        if (auth()->check() && auth()->user()->isAdmin()) {
+            return redirect()->route('admin.users.index');
+        }
+
         $kpis = [
             'depots_count' => Depot::count(),
             'reparations_count' => Reparation::count(),

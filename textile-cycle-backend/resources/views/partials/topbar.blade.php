@@ -12,8 +12,8 @@
 
         @auth
             <div style="display:flex;align-items:center;gap:.6rem">
-                <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .85rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                    <span class="material-icons-round" style="font-size:1.15rem;color:var(--secondary)">account_circle</span>
+                <a href="{{ route('profile.show') }}" style="display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;background:#F1F5F9;border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:var(--transition);" onmouseover="this.style.background='#E2E8F0'" onmouseout="this.style.background='#F1F5F9'">
+                    <img src="{{ Auth::user()->avatar_url }}" alt="Avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
                     <div>
                         <div style="font-size:.85rem;font-weight:600;color:var(--text-primary);line-height:1.2">
                             {{ Auth::user()->name }}
@@ -22,15 +22,15 @@
                             {{ Auth::user()->role ?? 'Donateur' }}
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Bouton Déconnexion --}}
                 <form method="POST" action="{{ route('logout') }}" style="margin:0">
                     @csrf
                     <button type="submit" class="btn btn-secondary btn-sm"
-                            style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .75rem;font-size:.8rem;color:var(--accent-red);border-color:rgba(255,101,132,.3);background:rgba(255,101,132,.08);transition:var(--transition)"
-                            onmouseover="this.style.background='rgba(255,101,132,.2)'"
-                            onmouseout="this.style.background='rgba(255,101,132,.08)'"
+                            style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .75rem;font-size:.8rem;color:var(--accent-red);border-color:#FECACA;background:#FEF2F2;transition:var(--transition)"
+                            onmouseover="this.style.background='#FEE2E2'"
+                            onmouseout="this.style.background='#FEF2F2'"
                             title="Se déconnecter">
                         <span class="material-icons-round" style="font-size:1rem">logout</span>
                         <span>Déconnexion</span>

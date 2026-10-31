@@ -286,8 +286,24 @@ class DefectDetectionService
                 ];
             }
 
-            $type = $label;
-            $cost = self::COST_TABLE[$type] ?? self::COST_TABLE['Usure'];
+            // Normalisation label Flask (variantes UTF-8)
+            $labelNorm = mb_strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $label));
+            if (str_contains($labelNorm, 'trou')) {
+                $type = 'Trou';
+            } elseif (str_contains($labelNorm, 'chirure') || str_contains($labelNorm, 'dechirure')) {
+                $type = 'DÃ©chirure';
+            } elseif (str_contains($labelNorm, 'tache')) {
+                $type = 'Tache';
+            } elseif (str_contains($labelNorm, 'fermeture')) {
+                $type = 'Fermeture cassÃ©e';
+            } elseif (str_contains($labelNorm, 'bouton')) {
+                $type = 'Bouton manquant';
+            } elseif (str_contains($labelNorm, 'usure')) {
+                $type = 'Usure';
+            } else {
+                $type = $label;
+            }
+            $cost = self::COST_TABLE[$type] ?? self::COST_TABLE['Trou'];
 
             $bbox = $data['bbox'] ?? null;
             $location = $data['location'] ?? null;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -38,8 +39,17 @@ class WebAuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+
+            // Si 2FA est activé sur le compte, rediriger vers le challenge 2FA
+            if (Auth::user()->two_factor_enabled) {
+                $request->session()->forget('2fa_verified');
+                return redirect()->route('2fa.challenge');
+            }
+
+            $request->session()->put('2fa_verified', true);
+
             return redirect()->intended(route('dashboard'))
-                ->with('success', '👋 Bienvenue, ' . Auth::user()->name . ' ! Connexion réussie.');
+                ->with('success', 'Bienvenue, ' . Auth::user()->name . ' ! Connexion réussie.');
         }
 
         return back()->withInput($request->only('email', 'remember'))
@@ -67,14 +77,14 @@ class WebAuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'role' => 'nullable|string|in:user,atelier,association',
         ], [
             'name.required' => 'Veuillez renseigner votre nom complet.',
             'email.required' => 'L\'adresse e-mail est obligatoire.',
             'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
             'password.required' => 'Le mot de passe est obligatoire.',
-            'password.min' => 'Le mot de passe doit contenir au moins 6 caractères.',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
@@ -85,11 +95,15 @@ class WebAuthController extends Controller
             'role' => $validated['role'] ?? 'user',
         ]);
 
+        // Déclencher l'événement Registered pour envoyer l'email de vérification
+        event(new Registered($user));
+
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->put('2fa_verified', true);
 
         return redirect()->route('dashboard')
-            ->with('success', '🎉 Compte créé avec succès ! Bienvenue sur TexTileCycle.');
+            ->with('success', 'Compte créé avec succès ! Bienvenue sur TexTileCycle.');
     }
 
     /**
@@ -102,6 +116,6 @@ class WebAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('success', '🔒 Vous avez été déconnecté avec succès.');
+            ->with('success', 'Vous avez été déconnecté avec succès.');
     }
 }

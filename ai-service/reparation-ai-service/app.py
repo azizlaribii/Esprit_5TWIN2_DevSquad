@@ -2,24 +2,8 @@
 Service IA Python / Flask — Réparation Intelligente
 =====================================================
 
-Deux modes possibles, choisis automatiquement au démarrage :
-
-1. MODÈLE ENTRAÎNÉ (prioritaire, si "model.pkl" existe) :
-   Un classifieur entraîné sur VOS photos via train.py (voir ce fichier).
-   C'est de l'apprentissage supervisé classique : vous donnez des exemples
-   étiquetés, le modèle apprend à distinguer les catégories.
-
-2. CLIP ZERO-SHOT (repli automatique si aucun modèle entraîné n'existe) :
-   Modèle de vision-langage pré-entraîné par OpenAI (gratuit, open-source),
-   compare la photo à des descriptions textuelles. Ne nécessite aucun
-   exemple de votre part, mais moins précis pour cette tâche spécifique.
-
-Installation (une seule fois) :
-    pip install -r requirements.txt
-
-Lancement :
-    python app.py
-    -> le service tourne sur http://127.0.0.1:5000
+Détection et classification des altérations textiles par modèle CLIP Zero-Shot
+et localisation automatique de la zone endommagée (Bounding Box & Zone anatomique).
 """
 
 import os
@@ -57,9 +41,7 @@ if os.path.exists(MODEL_PATH):
     print(f"Catégories apprises : {categories}")
 
 else:
-    print("Aucun 'model.pkl' trouvé -> utilisation de CLIP (zero-shot, sans "
-          "entraînement). Pour entraîner votre propre modèle sur vos photos, "
-          "voir train.py.")
+    print("Utilisation de CLIP Zero-Shot optimisé pour les altérations textiles.")
     from transformers import CLIPProcessor, CLIPModel
 
     CLIP_MODEL_NAME = "openai/clip-vit-base-patch32"
@@ -67,22 +49,74 @@ else:
     clip_processor = CLIPProcessor.from_pretrained(CLIP_MODEL_NAME)
     clip_model.eval()
 
+    # Prompts hautement précis pour éviter les confusions (ex: boutons/fermetures sur jeans)
     CANDIDATE_LABELS = {
-        "non_vetement": "a photo that does not show any clothing item",
-        "conforme": "a photo of a clothing item in good condition, with no damage",
-        "Trou": "a photo of a clothing item with a visible hole",
-        "Déchirure": "a photo of a clothing item with a visible tear or rip",
-        "Tache": "a photo of a clothing item with a visible stain",
-        "Fermeture cassée": "a photo of a clothing item with a broken zipper",
-        "Bouton manquant": "a photo of a clothing item with a missing button",
-        "Usure": "a photo of a clothing item that looks worn out or frayed",
+        "non_vetement": "a photo of a face, animal, room or landscape without clothing",
+        "conforme": "a photo of flawless clothing in good condition without any damage, stain or hole",
+        "Trou": "a visible hole in jeans, pants or fabric, punctured hole in clothes",
+        "Déchirure": "a photo of a shirt with a ripped open seam, torn fabric, rip or tear",
+        "Tache": "a photo of a clothing item with a liquid stain, spilled coffee stain, food stain, colored dirty spot",
+        "Fermeture cassée": "a broken zipper with missing teeth, separated zipper track, detached zipper slider",
+        "Bouton manquant": "a missing shirt button with empty buttonhole or loose thread",
+        "Usure": "heavily frayed, worn-out threadbare faded fabric",
     }
     LABEL_KEYS = list(CANDIDATE_LABELS.keys())
     LABEL_TEXTS = list(CANDIDATE_LABELS.values())
 
     MODE = "clip"
 
-print("Service prêt.")
+print("Service de Réparation IA prêt.")
+
+
+def find_defect_bbox_and_location(image, defect_type):
+    """
+    Localise spatialement la zone du défaut en détectant le contraste et l'écart
+    par rapport à la couleur dominante du vêtement.
+    """
+    if defect_type in ['non_vetement', 'conforme']:
+        return None, None
+
+    img_small = image.resize((100, 100)).convert('RGB')
+    arr = np.array(img_small, dtype=float)
+    median_color = np.median(arr, axis=(0, 1))
+    diff = np.linalg.norm(arr - median_color, axis=2)
+
+    win = 22
+    max_val = -1
+    best_r, best_c = 35, 35
+    for r in range(5, 100 - win - 5, 4):
+        for c in range(5, 100 - win - 5, 4):
+            val = np.mean(diff[r:r+win, c:c+win])
+            if val > max_val:
+                max_val = val
+                best_r, best_c = r, c
+
+    bbox = {
+        'x': round(float(best_c), 1),
+        'y': round(float(best_r), 1),
+        'width': round(win * 1.25, 1),
+        'height': round(win * 1.25, 1),
+    }
+
+    y_center = best_r + win / 2
+    x_center = best_c + win / 2
+
+    if y_center < 30:
+        location = "Col & Encolure" if abs(x_center - 50) < 20 else "Épaule"
+    elif y_center < 58:
+        if abs(x_center - 50) > 28:
+            location = "Manche"
+        else:
+            location = "Poitrine & Buste"
+    elif y_center < 78:
+        if defect_type == 'Trou':
+            location = "Genou / Cuisse"
+        else:
+            location = "Poche & Hanche"
+    else:
+        location = "Ourlet & Finition"
+
+    return bbox, location
 
 
 # ---------------------------------------------------------------------------
@@ -113,11 +147,14 @@ def analyze():
         best_score = float(probs[best_idx])
 
         all_scores = {classes[i]: round(float(probs[i]), 4) for i in range(len(classes))}
+        bbox, location = find_defect_bbox_and_location(image, best_label)
 
         return jsonify({
             "label": best_label,
             "confidence": round(best_score, 4),
             "all_scores": all_scores,
+            "bbox": bbox,
+            "location": location,
             "mode": "trained",
         })
 
@@ -136,10 +173,14 @@ def analyze():
     best_label = max(scores, key=scores.get)
     best_score = scores[best_label]
 
+    bbox, location = find_defect_bbox_and_location(image, best_label)
+
     return jsonify({
         "label": best_label,
         "confidence": round(best_score, 4),
         "all_scores": {k: round(v, 4) for k, v in scores.items()},
+        "bbox": bbox,
+        "location": location,
         "mode": "clip",
     })
 
@@ -147,8 +188,6 @@ def analyze():
 @app.route("/health", methods=["GET"])
 def health():
     info = {"status": "ok", "mode": MODE}
-    if MODE == "trained":
-        info["categories"] = categories
     return jsonify(info)
 
 

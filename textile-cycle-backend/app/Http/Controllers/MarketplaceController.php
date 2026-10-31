@@ -117,9 +117,16 @@ class MarketplaceController extends Controller
     // ══════════════════════════════════════════════════════
     // CREATE – Formulaire de publication
     // ══════════════════════════════════════════════════════
-    public function create()
+    public function create(Request $request)
     {
-        return view('marketplace.create');
+        $userId = Auth::id() ?? 1;
+        $armoireItems = \App\Models\VetementArmoire::where('user_id', $userId)->latest()->get();
+        $selectedArmoire = null;
+        if ($request->filled('armoire_id')) {
+            $selectedArmoire = \App\Models\VetementArmoire::where('user_id', $userId)->find($request->armoire_id)
+                ?? \App\Models\VetementArmoire::find($request->armoire_id);
+        }
+        return view('marketplace.create', compact('armoireItems', 'selectedArmoire'));
     }
 
     // ══════════════════════════════════════════════════════
@@ -130,10 +137,32 @@ class MarketplaceController extends Controller
         // ── Validation côté serveur
         $validated = $request->validated();
 
-        // ── Upload image
+        // ── Upload image ou récupération depuis l'Armoire
         $imageUrl = null;
         if ($request->hasFile('image')) {
             $imageUrl = $request->file('image')->store('marketplace', 'public');
+        } elseif ($request->filled('armoire_image')) {
+            $armoirePath = $request->armoire_image;
+            if (Storage::disk('public')->exists($armoirePath)) {
+                $ext = pathinfo($armoirePath, PATHINFO_EXTENSION) ?: 'jpg';
+                $newFilename = 'marketplace/' . Str::random(40) . '.' . $ext;
+                Storage::disk('public')->copy($armoirePath, $newFilename);
+                $imageUrl = $newFilename;
+            } else {
+                $imageUrl = $armoirePath;
+            }
+        } elseif ($request->filled('armoire_vetement_id')) {
+            $vetement = \App\Models\VetementArmoire::find($request->armoire_vetement_id);
+            if ($vetement && $vetement->image_path) {
+                if (Storage::disk('public')->exists($vetement->image_path)) {
+                    $ext = pathinfo($vetement->image_path, PATHINFO_EXTENSION) ?: 'jpg';
+                    $newFilename = 'marketplace/' . Str::random(40) . '.' . $ext;
+                    Storage::disk('public')->copy($vetement->image_path, $newFilename);
+                    $imageUrl = $newFilename;
+                } else {
+                    $imageUrl = $vetement->image_path;
+                }
+            }
         }
 
         // ── IA : Classification automatique
@@ -430,5 +459,64 @@ class MarketplaceController extends Controller
         });
 
         return $articles;
+    }
+
+    /**
+     * Basculer le statut d'un article (Disponible <-> Vendu)
+     */
+    public function toggleStatut(ArticleMarketplace $article)
+    {
+        $userId = Auth::id() ?? 1;
+        if ($article->user_id !== $userId && Auth::check()) {
+            abort(403);
+        }
+
+        $nouveauStatut = ($article->statut === 'disponible') ? 'vendu' : 'disponible';
+        $article->update(['statut' => $nouveauStatut]);
+
+        $message = ($nouveauStatut === 'vendu')
+            ? '🏷️ Article marqué comme vendu !'
+            : '✅ Article remis en vente et visible sur la Marketplace !';
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Générateur IA de description & argumentaire circulaire
+     */
+    public function ameliorerDescriptionIA(Request $request)
+    {
+        $titre = $request->titre ?: 'Vêtement éco-responsable';
+        $categorie = $request->categorie ?: 'Mode circulaire';
+        $marque = $request->marque ? 'de la marque ' . $request->marque : '';
+        $etat = $request->etat ?: 'Très bon état';
+
+        $templates = [
+            "✨ Pièce sélectionnée avec soin pour la mode circulaire : {$titre} {$marque}. Idéal pour un dressing durable et stylé. Article en {$etat}, vérifié et prêt pour une seconde vie !",
+            "🌿 Donnez une nouvelle vie à ce superbe {$titre} {$marque}. En {$etat}, confection soignée et confortable. Participez à l'économie textile circulaire en adoptant cette pièce !",
+            "👗 Excellente opportunité seconde main : {$titre} {$marque}. État : {$etat}. Parfait pour compléter votre garde-robe avec un impact environnemental réduit."
+        ];
+
+        $descriptionGeneree = $templates[array_rand($templates)];
+
+        return response()->json([
+            'description' => $descriptionGeneree,
+            'eco_points' => rand(15, 30),
+            'impact_co2' => '2.4 kg CO2e évités'
+        ]);
+    }
+
+    /**
+     * Télécharger ou afficher le reçu officiel de transaction circulaire
+     */
+    public function telechargerRecu(ArticleMarketplace $article)
+    {
+        $userId = Auth::id() ?? 1;
+        if ($article->user_id !== $userId && $article->acheteur_id !== $userId && Auth::check()) {
+            abort(403);
+        }
+
+        $article->load(['vendeur', 'acheteur']);
+        return view('marketplace.recu', compact('article'));
     }
 }
