@@ -8,23 +8,23 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
-            --primary: #6C63FF;
-            --primary-light: #8B85FF;
-            --secondary: #43D9AD;
-            --accent-red: #FF6584;
-            --accent-orange: #FFA726;
-            --bg-main: #0A0E1A;
-            --bg-surface: #111827;
-            --bg-card: #1A2235;
-            --text-primary: #F1F5F9;
-            --text-secondary: #94A3B8;
-            --text-muted: #64748B;
-            --border: rgba(255,255,255,0.08);
-            --gradient-primary: linear-gradient(135deg, #6C63FF 0%, #FF6584 100%);
-            --gradient-green: linear-gradient(135deg, #43D9AD 0%, #29B6F6 100%);
+            --primary: #5B52E0;
+            --primary-light: #7367F0;
+            --secondary: #10B981;
+            --accent-red: #EF4444;
+            --accent-orange: #F59E0B;
+            --bg-main: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --gradient-primary: linear-gradient(135deg, #5B52E0 0%, #EC4899 100%);
+            --gradient-green: linear-gradient(135deg, #10B981 0%, #0EA5E9 100%);
             --radius-md: 12px;
             --radius-lg: 18px;
-            --shadow-glow: 0 0 35px rgba(108,99,255,0.25);
+            --shadow-glow: 0 4px 25px rgba(91,82,224,0.15);
         }
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         body{
@@ -42,12 +42,12 @@
         .glow-orb{
             position:absolute;
             border-radius:50%;
-            filter:blur(90px);
+            filter:blur(110px);
             pointer-events:none;
-            opacity:0.35;
+            opacity:0.25;
         }
-        .orb-1{top:-10%;left:10%;width:350px;height:350px;background:var(--primary)}
-        .orb-2{bottom:-10%;right:10%;width:350px;height:350px;background:var(--secondary)}
+        .orb-1{top:-10%;left:10%;width:350px;height:350px;background:#C7D2FE}
+        .orb-2{bottom:-10%;right:10%;width:350px;height:350px;background:#A7F3D0}
 
         .auth-container{
             width:100%;
@@ -58,14 +58,14 @@
             border:1px solid var(--border);
             border-radius:var(--radius-lg);
             overflow:hidden;
-            box-shadow:0 20px 50px rgba(0,0,0,0.5);
+            box-shadow:0 12px 40px rgba(15,23,42,0.06);
             position:relative;
             z-index:10;
         }
 
         /* Banner Left */
         .auth-banner{
-            background:linear-gradient(135deg, rgba(108,99,255,0.15), rgba(67,217,173,0.08));
+            background:linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%);
             padding:3rem 2.5rem;
             display:flex;
             flex-direction:column;
@@ -77,8 +77,8 @@
             align-items:center;
             gap:.5rem;
             padding:.4rem .85rem;
-            background:rgba(67,217,173,0.15);
-            border:1px solid rgba(67,217,173,0.3);
+            background:#ECFDF5;
+            border:1px solid #A7F3D0;
             border-radius:100px;
             color:var(--secondary);
             font-size:.78rem;
@@ -91,6 +91,7 @@
             font-weight:800;
             line-height:1.2;
             margin:1.5rem 0 1rem;
+            color:var(--text-primary);
         }
         .gradient-text{
             background:var(--gradient-primary);
@@ -132,6 +133,7 @@
             display:flex;
             flex-direction:column;
             justify-content:center;
+            background:#FFFFFF;
         }
         .logo-wrap{
             display:flex;
@@ -148,6 +150,7 @@
             align-items:center;
             justify-content:center;
             color:white;
+            box-shadow:0 4px 12px rgba(91,82,224,0.25);
         }
         .logo-title{
             font-family:'Outfit',sans-serif;
@@ -160,6 +163,7 @@
             font-size:1.5rem;
             font-weight:700;
             margin-bottom:.35rem;
+            color:var(--text-primary);
         }
         .auth-sub{
             font-size:.85rem;
@@ -169,7 +173,7 @@
 
         .auth-tabs{
             display:flex;
-            background:rgba(255,255,255,0.04);
+            background:#F1F5F9;
             border-radius:var(--radius-md);
             padding:4px;
             margin-bottom:1.5rem;
@@ -187,9 +191,9 @@
             transition:all .2s ease;
         }
         .tab-btn.active{
-            background:var(--primary);
-            color:white;
-            box-shadow:0 2px 10px rgba(108,99,255,0.4);
+            background:#FFFFFF;
+            color:var(--primary);
+            box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
         .form-group{margin-bottom:1.25rem}
@@ -206,7 +210,7 @@
         .form-control{
             width:100%;
             padding:.75rem 1rem .75rem 2.75rem;
-            background:rgba(255,255,255,0.04);
+            background:#FFFFFF;
             border:1px solid var(--border);
             border-radius:var(--radius-md);
             color:var(--text-primary);
@@ -217,8 +221,8 @@
         .form-control:focus{
             outline:none;
             border-color:var(--primary);
-            background:rgba(108,99,255,0.06);
-            box-shadow:0 0 0 3px rgba(108,99,255,0.15);
+            background:#FFFFFF;
+            box-shadow:0 0 0 3px rgba(91,82,224,0.12);
         }
         .toggle-pwd{
             position:absolute;
@@ -246,14 +250,14 @@
             align-items:center;
             justify-content:center;
             gap:.5rem;
-            box-shadow:0 4px 15px rgba(108,99,255,0.35);
+            box-shadow:0 4px 15px rgba(91,82,224,0.25);
             transition:all .25s ease;
             font-family:'Inter',sans-serif;
             margin-top:1.5rem;
         }
         .btn-submit:hover{
             transform:translateY(-2px);
-            box-shadow:0 6px 25px rgba(108,99,255,0.5);
+            box-shadow:0 6px 20px rgba(91,82,224,0.4);
         }
 
         .alert{
@@ -266,13 +270,13 @@
             gap:.5rem;
         }
         .alert-danger{
-            background:rgba(255,101,132,0.12);
-            border:1px solid rgba(255,101,132,0.3);
+            background:#FEF2F2;
+            border:1px solid #FECACA;
             color:var(--accent-red);
         }
         .alert-success{
-            background:rgba(67,217,173,0.12);
-            border:1px solid rgba(67,217,173,0.3);
+            background:#ECFDF5;
+            border:1px solid #A7F3D0;
             color:var(--secondary);
         }
 
@@ -297,7 +301,7 @@
         }
         .demo-chip{
             padding:.35rem .65rem;
-            background:rgba(255,255,255,0.04);
+            background:#F8FAFC;
             border:1px solid var(--border);
             border-radius:8px;
             font-size:.75rem;
@@ -306,9 +310,9 @@
             transition:all .2s ease;
         }
         .demo-chip:hover{
-            background:rgba(108,99,255,0.15);
-            border-color:var(--primary);
-            color:var(--primary-light);
+            background:#EEF2FF;
+            border-color:#C7D2FE;
+            color:var(--primary);
         }
 
         @media(max-width:768px){
@@ -341,7 +345,7 @@
 
             <div class="features-list">
                 <div class="feat-item">
-                    <div class="feat-icon" style="background:rgba(108,99,255,.2);color:#6C63FF">
+                    <div class="feat-icon" style="background:#EEF2FF;color:#5B52E0">
                         <span class="material-icons-round">storefront</span>
                     </div>
                     <div>
@@ -349,24 +353,22 @@
                         <div style="font-size:.78rem">Vente, échange et don de vêtements avec IA</div>
                     </div>
                 </div>
-
                 <div class="feat-item">
-                    <div class="feat-icon" style="background:rgba(255,101,132,.2);color:#FF6584">
+                    <div class="feat-icon" style="background:#ECFDF5;color:#10B981">
                         <span class="material-icons-round">build</span>
                     </div>
                     <div>
-                        <strong style="color:var(--text-primary)">Ateliers & Réparations</strong>
-                        <div style="font-size:.78rem">Artisans certifiés et retouches de qualité</div>
+                        <strong style="color:var(--text-primary)">Diagnostic & Réparation</strong>
+                        <div style="font-size:.78rem">Détection IA des défauts et mise en relation ateliers</div>
                     </div>
                 </div>
-
                 <div class="feat-item">
-                    <div class="feat-icon" style="background:rgba(67,217,173,.2);color:#43D9AD">
+                    <div class="feat-icon" style="background:#FEF3C7;color:#F59E0B">
                         <span class="material-icons-round">volunteer_activism</span>
                     </div>
                     <div>
-                        <strong style="color:var(--text-primary)">Dons Solidaires</strong>
-                        <div style="font-size:.78rem">Redistribution aux associations caritatives</div>
+                        <strong style="color:var(--text-primary)">Dons Intelligents</strong>
+                        <div style="font-size:.78rem">Matching automatisé avec les besoins associatifs</div>
                     </div>
                 </div>
             </div>
@@ -412,7 +414,7 @@
         @endif
 
         {{-- Formulaire de connexion --}}
-        <form method="POST" action="{{ route('login.post') }}">
+        <form method="POST" action="{{ route('login') }}">
             @csrf
 
             <div class="form-group">
@@ -427,7 +429,7 @@
             <div class="form-group">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
                     <label class="form-label" for="password" style="margin-bottom:0">Mot de passe</label>
-                    <span style="font-size:.78rem;color:var(--primary-light)">Mot de passe par défaut : password</span>
+                    <span style="font-size:.78rem;color:var(--primary)">Mot de passe : password</span>
                 </div>
                 <div class="input-wrap">
                     <span class="material-icons-round">lock</span>
@@ -444,6 +446,7 @@
                     <input type="checkbox" name="remember" value="1" checked>
                     Se souvenir de moi
                 </label>
+                <a href="{{ route('password.request') }}" style="color:var(--primary);text-decoration:none;font-weight:500;">Mot de passe oublié ?</a>
             </div>
 
             <button type="submit" class="btn-submit">

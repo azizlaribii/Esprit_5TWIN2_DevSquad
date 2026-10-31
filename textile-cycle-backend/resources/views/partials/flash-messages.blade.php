@@ -10,7 +10,7 @@
     padding: .95rem 1.25rem;
     margin-bottom: 1.25rem;
     border-radius: var(--radius-md);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
     transition: opacity .4s ease, transform .4s ease, max-height .4s ease, margin .4s ease, padding .4s ease;
     max-height: 200px;
     animation: alertSlideDown .35s cubic-bezier(0.16, 1, 0.3, 1);

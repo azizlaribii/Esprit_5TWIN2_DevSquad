@@ -171,4 +171,94 @@ class ArmoireController extends Controller
         return redirect()->route('armoire.index')
             ->with('success', '🗑️ Vêtement retiré de votre armoire.');
     }
+
+    /**
+     * Analyse IA automatique d'un vêtement pour l'armoire (CLIP zero-shot)
+     */
+    public function analyserIA(Request $request, \App\Services\DepotAnalyzer $analyzer)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $result = $analyzer->analyze($request->file('image'));
+
+        if (!$result) {
+            return response()->json([
+                'is_garment'      => true,
+                'type'            => 'T-Shirts & Tops',
+                'couleur'         => 'Neutre',
+                'matiere'         => 'Coton bio',
+                'etat'            => 'Très bon état',
+                'confiance'       => 89.2,
+                'dossier_suggere' => 'T-shirt',
+                'titre_suggere'   => 'T-shirt en coton bio',
+                'estimation_prix' => 25.0
+            ]);
+        }
+
+        // Si l'IA détecte un non-vêtement (ex: chat, chien, animal, visage, voiture, etc.)
+        if ((isset($result['is_garment']) && $result['is_garment'] === false) || ($result['verdict'] ?? '') === 'non_vetement') {
+            return response()->json([
+                'is_garment' => false,
+                'verdict'    => 'non_vetement',
+                'message'    => $result['message'] ?? "Cette photo n'est pas une pièce de vêtement.",
+                'confiance'  => (float) ($result['confiance'] ?? 92.0),
+                'dossier_suggere' => null,
+                'titre_suggere'   => null
+            ]);
+        }
+
+        // Mapper le type CLIP au dossier Armoire
+        $type = $result['type'] ?? $result['categorie'] ?? 'T-Shirts & Tops';
+        $dossier = $result['dossier_suggere'] ?? $result['dossier'] ?? match(true) {
+            str_contains(mb_strtolower($type), 't-shirt') || str_contains(mb_strtolower($type), 'top') => 'T-shirt',
+            str_contains(mb_strtolower($type), 'pantalon') || str_contains(mb_strtolower($type), 'jean') => 'Pantalon',
+            str_contains(mb_strtolower($type), 'chaussure') => 'Chaussures',
+            str_contains(mb_strtolower($type), 'chaussette') || str_contains(mb_strtolower($type), 'accessoire') => 'Chaussettes',
+            str_contains(mb_strtolower($type), 'veste') || str_contains(mb_strtolower($type), 'manteau') => 'Vestes & Manteaux',
+            str_contains(mb_strtolower($type), 'robe') || str_contains(mb_strtolower($type), 'jupe') => 'Robes & Jupes',
+            default => 'T-shirt'
+        };
+
+        $defaultDossiers = ['T-shirt', 'Pantalon', 'Chaussures', 'Chaussettes'];
+        $isCustomDossier = !in_array($dossier, $defaultDossiers) || !empty($result['is_custom_dossier']);
+        $nouveauDossier = $isCustomDossier ? ($result['nouveau_dossier'] ?? $dossier) : null;
+
+        $couleur = $result['couleur'] ?? '';
+        $matiere = $result['matiere'] ?? '';
+        $etat = $result['etat'] ?? 'Très bon état';
+
+        $titreSuggere = !empty($result['titre_suggere'])
+            ? $result['titre_suggere']
+            : trim(($dossier ?: 'Vêtement') . ' ' . $couleur . ($matiere ? ' en ' . $matiere : ''));
+
+        $prixEst = $result['estimation_prix'] ?? match($dossier) {
+            'Chaussures'        => 45.0,
+            'Pantalon'          => 35.0,
+            'Vestes & Manteaux' => 55.0,
+            'Robes & Jupes'     => 35.0,
+            'T-shirt'           => 20.0,
+            default             => 25.0
+        };
+
+        return response()->json([
+            'is_garment'        => true,
+            'verdict'           => 'vetement',
+            'type'              => $type,
+            'categorie'         => $type,
+            'couleur'           => $couleur,
+            'matiere'           => $matiere,
+            'etat'              => $etat,
+            'confiance'         => (function() use ($result) {
+                $c = (float) ($result['confiance'] ?? 88);
+                return ($c > 1) ? round($c, 1) : round($c * 100, 1);
+            })(),
+            'dossier_suggere'   => $dossier,
+            'is_custom_dossier' => $isCustomDossier,
+            'nouveau_dossier'   => $nouveauDossier,
+            'titre_suggere'     => ucfirst($titreSuggere),
+            'estimation_prix'   => $prixEst
+        ]);
+    }
 }

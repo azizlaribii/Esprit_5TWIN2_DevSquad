@@ -79,6 +79,20 @@
                         </div>
                     </div>
 
+                    {{-- Active Photo Preview (from Armoire or Upload) --}}
+                    <div id="active-photo-preview" style="text-align:center;padding:1.25rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:1.25rem;display:{{ (isset($selectedArmoire) || old('armoire_image') || (isset($article) && $article->image_url)) ? 'block' : 'none' }}">
+                        <div style="position:relative;display:inline-block">
+                            <img id="main-active-img" src="{{ isset($selectedArmoire) ? $selectedArmoire->display_image_url : (isset($article) ? $article->display_image_url : '') }}"
+                                 style="max-height:220px;max-width:100%;border-radius:var(--radius-md);object-fit:cover;box-shadow:0 6px 20px rgba(0,0,0,.08);border:2px solid var(--primary)" alt="Photo vêtement">
+                            <span id="main-active-badge" style="position:absolute;top:8px;right:8px;background:var(--secondary);color:#0a0e1a;font-weight:800;font-size:.72rem;padding:.25rem .65rem;border-radius:100px;box-shadow:0 2px 6px rgba(0,0,0,.15)">
+                                {{ isset($selectedArmoire) ? '✓ Photo de votre armoire' : 'Photo active' }}
+                            </span>
+                        </div>
+                        <div style="font-size:.82rem;font-weight:600;color:var(--text-primary);margin-top:.6rem" id="active-photo-title">
+                            {{ isset($selectedArmoire) ? $selectedArmoire->titre : 'Photo prête pour publication' }}
+                        </div>
+                    </div>
+
                     {{-- Hidden inputs for armoire selection --}}
                     <input type="hidden" name="armoire_image" id="armoire_image_input" value="{{ old('armoire_image', $selectedArmoire->image_path ?? '') }}">
                     <input type="hidden" name="armoire_vetement_id" id="armoire_vetement_id_input" value="{{ old('armoire_vetement_id', $selectedArmoire->id ?? '') }}">
@@ -504,5 +518,39 @@ document.addEventListener('DOMContentLoaded', function() {
     );
 });
 @endif
+async function genererDescriptionIA() {
+    const btn = document.getElementById('btn-ia-desc');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-icons-round" style="font-size:.9rem">hourglass_top</span> Rédaction IA...';
+    btn.disabled = true;
+
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+        const res = await fetch('{{ route("marketplace.ameliorer-ia") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf ?? ''
+            },
+            body: JSON.stringify({
+                titre: document.getElementById('titre')?.value,
+                categorie: document.getElementById('categorie')?.value,
+                marque: document.getElementById('marque')?.value,
+                etat: document.getElementById('etat')?.value
+            })
+        });
+
+        const data = await res.json();
+        if (data.description) {
+            document.getElementById('description').value = data.description;
+        }
+    } catch(e) {
+        console.error(e);
+    } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+    }
+}
 </script>
 @endsection

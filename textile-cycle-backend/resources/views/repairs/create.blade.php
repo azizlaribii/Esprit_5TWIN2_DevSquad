@@ -1,20 +1,53 @@
 @extends('layouts.app')
 
-@section('title', 'Analyse Intelligente de Vêtement')
+@section('title', 'Diagnostic & Réparation Intelligente')
 @section('meta_description', 'Photographiez votre vêtement endommagé pour identifier le défaut et trouver la réparation adaptée')
 @section('breadcrumb', 'Gestion › Réparations › Analyse IA')
 
+@section('styles')
+<style>
+@keyframes scan-move {
+    0% { top: 6%; }
+    50% { top: 90%; }
+    100% { top: 6%; }
+}
+.dropzone-box {
+    border: 2px dashed rgba(108,99,255,0.35);
+    border-radius: var(--radius-lg);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(108,99,255,0.02);
+    display: block;
+    transition: var(--transition);
+    position: relative;
+}
+.dropzone-box:hover {
+    border-color: var(--primary) !important;
+    background: rgba(108,99,255,0.06) !important;
+}
+.example-box {
+    transition: var(--transition);
+}
+.example-box:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+</style>
+@endsection
+
 @section('content')
-<div class="animate-fade-in-up" style="max-width:900px; margin:0 auto">
+<div class="animate-fade-in-up" style="max-width:920px; margin:0 auto">
 
     <!-- Header navigation -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem">
         <div>
             <h1 class="page-title" style="display:flex; align-items:center; gap:0.5rem">
-                <span class="material-icons-round" style="color:var(--primary-light)">auto_awesome</span>
+                <span class="material-icons-round" style="color:var(--primary)">auto_awesome</span>
                 Diagnostic & Réparation Intelligente
             </h1>
-            <p class="page-subtitle">Détection automatisée des défauts textiles par intelligence artificielle</p>
+            <p class="page-subtitle">Détection automatisée des défauts textiles par intelligence artificielle (Vision CLIP)</p>
         </div>
         <div style="display:flex; gap:0.75rem">
             <a href="{{ route('reparations.index') }}" class="btn btn-secondary">
@@ -27,28 +60,28 @@
     </div>
 
     <!-- Mode Standard : Formulaire de scan & sélection -->
-    <div id="createSection" class="card" style="padding:2rem">
+    <div id="createSection" class="card" style="padding:2.25rem">
         <div style="text-align:center; margin-bottom:2rem">
             <div style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.35rem 0.85rem; border-radius:999px; background:rgba(67,217,173,0.12); border:1px solid rgba(67,217,173,0.3); color:var(--secondary); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:1rem">
                 <span style="width:8px; height:8px; border-radius:50%; background:var(--secondary); box-shadow:0 0 8px var(--secondary)"></span>
-                Service IA Actif & Prêt
+                Service IA Prêt (Port 5000)
             </div>
             <h2 style="font-size:1.6rem; font-family:'Outfit',sans-serif; margin-bottom:0.5rem">
                 Photographiez votre pièce textile
             </h2>
             <p style="color:var(--text-secondary); font-size:0.95rem; max-width:580px; margin:0 auto">
-                Téléversez une photo ou utilisez votre appareil. Notre modèle identifie le type d'altération (trou, déchirure, tache, fermeture...) et estime les coûts de retouche.
+                Téléversez une photo ou utilisez un exemple. Notre modèle identifie le type d'altération (trou, déchirure, tache, fermeture...) et estime les coûts de retouche.
             </p>
         </div>
 
-        <div id="errorAlert" class="alert alert-danger" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1rem; border-radius:10px; background:rgba(255,101,132,0.15); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)"></div>
+        <div id="errorAlert" class="alert alert-danger" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1rem; border-radius:10px; background:rgba(255,101,132,0.12); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)"></div>
 
         <!-- Zone de dépôt / Prise de vue -->
-        <label class="dropzone-box" style="border:2px dashed var(--border-active); border-radius:16px; padding:3rem 1.5rem; text-align:center; cursor:pointer; background:rgba(17,24,39,0.6); display:block; transition:var(--transition); position:relative">
+        <label class="dropzone-box">
             <input type="file" id="photoInput" accept="image/*" hidden onchange="onFileSelected(event)" />
             
             <div id="dropzoneEmpty">
-                <div style="width:64px; height:64px; border-radius:50%; background:rgba(108,99,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem; color:var(--primary-light)">
+                <div style="width:64px; height:64px; border-radius:50%; background:rgba(108,99,255,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem; color:var(--primary)">
                     <span class="material-icons-round" style="font-size:2rem">add_photo_alternate</span>
                 </div>
                 <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem">
@@ -65,10 +98,10 @@
             </div>
 
             <div id="dropzonePreview" style="display:none">
-                <div style="position:relative; display:inline-block; max-width:400px; border-radius:12px; overflow:hidden; border:2px solid var(--primary); box-shadow:var(--shadow-glow)">
-                    <img id="previewImg" src="" alt="Aperçu du vêtement" style="width:100%; display:block; max-height:360px; object-fit:contain; background:#000" />
+                <div style="position:relative; display:inline-block; max-width:420px; border-radius:12px; overflow:hidden; border:2px solid var(--primary); box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+                    <img id="previewImg" src="" alt="Aperçu du vêtement" style="width:100%; display:block; max-height:360px; object-fit:contain; background:white" />
                 </div>
-                <p style="margin-top:1rem; color:var(--primary-light); font-size:0.85rem; font-weight:600">
+                <p style="margin-top:1rem; color:var(--primary); font-size:0.85rem; font-weight:600">
                     <span class="material-icons-round" style="font-size:1rem; vertical-align:middle">refresh</span> Cliquez pour choisir une autre image
                 </p>
             </div>
@@ -86,53 +119,53 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem">
                 <div class="card example-box" style="padding:0; overflow:hidden; cursor:pointer; border:1px solid var(--border)" onclick="useExample('Jean troué', '/examples/jean-trou.jpg')">
-                    <img src="/examples/jean-trou.jpg" alt="Jean avec trou" style="width:100%; height:120px; object-fit:cover" onerror="this.src='https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400'" />
+                    <img src="/examples/jean-trou.jpg" alt="Jean avec trou" style="width:100%; height:130px; object-fit:cover" />
                     <div style="padding:0.75rem; text-align:center">
-                        <div style="font-weight:700; font-size:0.85rem">Jean avec trou</div>
-                        <div style="color:var(--secondary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester →</div>
+                        <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary)">Jean avec trou</div>
+                        <div style="color:var(--primary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester l'IA →</div>
                     </div>
                 </div>
                 <div class="card example-box" style="padding:0; overflow:hidden; cursor:pointer; border:1px solid var(--border)" onclick="useExample('T-shirt taché', '/examples/tshirt-tache.jpg')">
-                    <img src="/examples/tshirt-tache.jpg" alt="T-shirt taché" style="width:100%; height:120px; object-fit:cover" onerror="this.src='https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400'" />
+                    <img src="/examples/tshirt-tache.jpg" alt="T-shirt taché" style="width:100%; height:130px; object-fit:cover" />
                     <div style="padding:0.75rem; text-align:center">
-                        <div style="font-weight:700; font-size:0.85rem">T-shirt taché</div>
-                        <div style="color:var(--secondary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester →</div>
+                        <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary)">T-shirt taché</div>
+                        <div style="color:var(--primary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester l'IA →</div>
                     </div>
                 </div>
-                <div class="card example-box" style="padding:0; overflow:hidden; cursor:pointer; border:1px solid var(--border)" onclick="useExample('Vêtement déchiré', '/examples/chemise-dechirure.jpg')">
-                    <img src="/examples/chemise-dechirure.jpg" alt="Vêtement déchiré" style="width:100%; height:120px; object-fit:cover" onerror="this.src='https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400'" />
+                <div class="card example-box" style="padding:0; overflow:hidden; cursor:pointer; border:1px solid var(--border)" onclick="useExample('Chemise déchirée', '/examples/chemise-dechirure.jpg')">
+                    <img src="/examples/chemise-dechirure.jpg" alt="Chemise déchirée" style="width:100%; height:130px; object-fit:cover" />
                     <div style="padding:0.75rem; text-align:center">
-                        <div style="font-weight:700; font-size:0.85rem">Chemise déchirée</div>
-                        <div style="color:var(--secondary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester →</div>
+                        <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary)">Chemise déchirée</div>
+                        <div style="color:var(--primary); font-size:0.75rem; font-weight:600; margin-top:0.25rem">Tester l'IA →</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Défauts pris en charge -->
-        <div style="margin-top:2rem; padding:1.25rem; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--border)">
+        <div style="margin-top:2rem; padding:1.25rem; background:#f8fafc; border-radius:12px; border:1px solid var(--border)">
             <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:0.75rem">
                 Défauts reconnus par le modèle :
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:0.5rem">
-                <span class="badge" style="background:rgba(255,101,132,0.15); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)">🔴 Trou</span>
-                <span class="badge" style="background:rgba(255,101,132,0.15); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)">🔴 Déchirure</span>
-                <span class="badge" style="background:rgba(255,167,38,0.15); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Tache</span>
-                <span class="badge" style="background:rgba(255,167,38,0.15); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Fermeture cassée</span>
-                <span class="badge" style="background:rgba(255,167,38,0.15); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Bouton manquant</span>
-                <span class="badge" style="background:rgba(67,217,173,0.15); color:var(--secondary); border:1px solid rgba(67,217,173,0.3)">🟡 Usure & Décoloration</span>
+                <span class="badge" style="background:rgba(255,101,132,0.12); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)">🔴 Trou</span>
+                <span class="badge" style="background:rgba(255,101,132,0.12); color:var(--accent-red); border:1px solid rgba(255,101,132,0.3)">🔴 Déchirure</span>
+                <span class="badge" style="background:rgba(255,167,38,0.12); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Tache</span>
+                <span class="badge" style="background:rgba(255,167,38,0.12); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Fermeture cassée</span>
+                <span class="badge" style="background:rgba(255,167,38,0.12); color:var(--accent-orange); border:1px solid rgba(255,167,38,0.3)">🟠 Bouton manquant</span>
+                <span class="badge" style="background:rgba(67,217,173,0.12); color:var(--secondary); border:1px solid rgba(67,217,173,0.3)">🟡 Usure & Décoloration</span>
             </div>
         </div>
     </div>
 
     <!-- Mode Scan / Analyse en direct -->
     <div id="analyzingSection" class="card" style="display:none; text-align:center; padding:3rem 1.5rem">
-        <div style="position:relative; max-width:440px; margin:0 auto 1.5rem; border-radius:16px; overflow:hidden; border:2px solid var(--primary); box-shadow:var(--shadow-glow)">
+        <div style="position:relative; max-width:440px; margin:0 auto 1.5rem; border-radius:16px; overflow:hidden; border:2px solid var(--primary); box-shadow:0 10px 30px rgba(0,0,0,0.1)">
             <div id="scanLine" style="position:absolute; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,var(--secondary),transparent); box-shadow:0 0 16px 3px var(--secondary); animation:scan-move 1.8s ease-in-out infinite; z-index:10"></div>
-            <img id="scanPreviewImg" src="" alt="Vêtement en cours d'analyse" style="width:100%; display:block; max-height:400px; object-fit:cover; filter:brightness(0.85)" />
-            <div style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(10,14,26,0.9); border:1px solid var(--border); border-radius:999px; padding:0.45rem 1rem; font-size:0.85rem; display:flex; align-items:center; gap:0.5rem; white-space:nowrap; z-index:11">
+            <img id="scanPreviewImg" src="" alt="Vêtement en cours d'analyse" style="width:100%; display:block; max-height:400px; object-fit:cover" />
+            <div style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:999px; padding:0.45rem 1rem; font-size:0.85rem; display:flex; align-items:center; gap:0.5rem; white-space:nowrap; z-index:11; box-shadow:0 4px 15px rgba(0,0,0,0.1)">
                 <span style="width:8px; height:8px; border-radius:50%; background:var(--secondary); box-shadow:0 0 6px var(--secondary)"></span>
-                <span id="stepLabel">Chargement de l'image...</span>
+                <span id="stepLabel" style="color:var(--text-primary); font-weight:600">Chargement de l'image...</span>
             </div>
         </div>
 
@@ -141,29 +174,12 @@
         </div>
         <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:1.5rem">Diagnostic IA en cours d'exécution...</p>
 
-        <div style="max-width:440px; margin:0 auto; height:8px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden">
+        <div style="max-width:440px; margin:0 auto; height:8px; border-radius:999px; background:rgba(0,0,0,0.06); overflow:hidden">
             <div id="progressBar" style="height:100%; width:20%; background:var(--gradient-green); border-radius:999px; transition:width 0.3s ease"></div>
         </div>
     </div>
 
 </div>
-
-<style>
-@keyframes scan-move {
-    0% { top: 6%; }
-    50% { top: 90%; }
-    100% { top: 6%; }
-}
-.dropzone-box:hover {
-    border-color: var(--primary) !important;
-    background: rgba(108,99,255,0.05) !important;
-}
-.example-box:hover {
-    transform: translateY(-4px);
-    border-color: var(--primary) !important;
-    box-shadow: var(--shadow-glow);
-}
-</style>
 @endsection
 
 @push('scripts')
@@ -254,11 +270,11 @@ async function submitAnalysis() {
 
     try {
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-        const res = await fetch('/api/repairs', {
+        const res = await fetch('/reparations/analyser-ia', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
-                ...(csrf ? {'X-CSRF-TOKEN': csrf} : {})
+                'X-CSRF-TOKEN': csrf ?? ''
             },
             body: formData
         });
@@ -283,7 +299,7 @@ async function submitAnalysis() {
 window.onWorkshopSaved = function(newWorkshop) {
     const name = newWorkshop?.name ?? 'L\'atelier';
     const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:99999;padding:.9rem 1.4rem;border-radius:12px;background:rgba(67,217,173,.15);border:1px solid rgba(67,217,173,.4);color:#43D9AD;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.6rem;box-shadow:0 8px 24px rgba(0,0,0,.4);';
+    toast.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:99999;padding:.9rem 1.4rem;border-radius:12px;background:rgba(67,217,173,.15);border:1px solid rgba(67,217,173,.4);color:#43D9AD;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.6rem;box-shadow:0 8px 24px rgba(0,0,0,.1);';
     toast.innerHTML = `<span class="material-icons-round">check_circle</span> <span>${name} ajouté avec succès !</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);

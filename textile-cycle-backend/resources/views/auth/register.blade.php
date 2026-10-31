@@ -8,19 +8,19 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
-            --primary: #6C63FF;
-            --primary-light: #8B85FF;
-            --secondary: #43D9AD;
-            --accent-red: #FF6584;
-            --accent-orange: #FFA726;
-            --bg-main: #0A0E1A;
-            --bg-surface: #111827;
-            --bg-card: #1A2235;
-            --text-primary: #F1F5F9;
-            --text-secondary: #94A3B8;
-            --text-muted: #64748B;
-            --border: rgba(255,255,255,0.08);
-            --gradient-primary: linear-gradient(135deg, #6C63FF 0%, #FF6584 100%);
+            --primary: #5B52E0;
+            --primary-light: #7367F0;
+            --secondary: #10B981;
+            --accent-red: #EF4444;
+            --accent-orange: #F59E0B;
+            --bg-main: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --gradient-primary: linear-gradient(135deg, #5B52E0 0%, #EC4899 100%);
             --radius-md: 12px;
             --radius-lg: 18px;
         }
@@ -40,12 +40,12 @@
         .glow-orb{
             position:absolute;
             border-radius:50%;
-            filter:blur(90px);
+            filter:blur(110px);
             pointer-events:none;
-            opacity:0.35;
+            opacity:0.25;
         }
-        .orb-1{top:-10%;left:10%;width:350px;height:350px;background:var(--primary)}
-        .orb-2{bottom:-10%;right:10%;width:350px;height:350px;background:var(--secondary)}
+        .orb-1{top:-10%;left:10%;width:350px;height:350px;background:#C7D2FE}
+        .orb-2{bottom:-10%;right:10%;width:350px;height:350px;background:#A7F3D0}
 
         .auth-container{
             width:100%;
@@ -54,21 +54,21 @@
             border:1px solid var(--border);
             border-radius:var(--radius-lg);
             padding:2.5rem;
-            box-shadow:0 20px 50px rgba(0,0,0,0.5);
+            box-shadow:0 12px 40px rgba(15,23,42,0.06);
             position:relative;
             z-index:10;
         }
 
         .logo-wrap{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem}
-        .logo-box{width:40px;height:40px;border-radius:10px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;color:white}
-        .logo-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800}
+        .logo-box{width:40px;height:40px;border-radius:10px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;color:white;box-shadow:0 4px 12px rgba(91,82,224,0.25)}
+        .logo-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text-primary)}
 
-        .auth-heading{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:.35rem}
+        .auth-heading{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:.35rem;color:var(--text-primary)}
         .auth-sub{font-size:.85rem;color:var(--text-muted);margin-bottom:1.5rem}
 
         .auth-tabs{
             display:flex;
-            background:rgba(255,255,255,0.04);
+            background:#F1F5F9;
             border-radius:var(--radius-md);
             padding:4px;
             margin-bottom:1.5rem;
@@ -86,9 +86,9 @@
             transition:all .2s ease;
         }
         .tab-btn.active{
-            background:var(--primary);
-            color:white;
-            box-shadow:0 2px 10px rgba(108,99,255,0.4);
+            background:#FFFFFF;
+            color:var(--primary);
+            box-shadow:0 2px 8px rgba(0,0,0,0.06);
         }
 
         .form-group{margin-bottom:1.15rem}
@@ -105,7 +105,7 @@
         .form-control{
             width:100%;
             padding:.75rem 1rem .75rem 2.75rem;
-            background:rgba(255,255,255,0.04);
+            background:#FFFFFF;
             border:1px solid var(--border);
             border-radius:var(--radius-md);
             color:var(--text-primary);
@@ -116,8 +116,8 @@
         .form-control:focus{
             outline:none;
             border-color:var(--primary);
-            background:rgba(108,99,255,0.06);
-            box-shadow:0 0 0 3px rgba(108,99,255,0.15);
+            background:#FFFFFF;
+            box-shadow:0 0 0 3px rgba(91,82,224,0.12);
         }
 
         .btn-submit{
@@ -134,12 +134,12 @@
             align-items:center;
             justify-content:center;
             gap:.5rem;
-            box-shadow:0 4px 15px rgba(108,99,255,0.35);
+            box-shadow:0 4px 15px rgba(91,82,224,0.25);
             transition:all .25s ease;
             font-family:'Inter',sans-serif;
             margin-top:1.5rem;
         }
-        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(108,99,255,0.5)}
+        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(91,82,224,0.4)}
 
         .alert{
             padding:.75rem 1rem;
@@ -149,8 +149,8 @@
             display:flex;
             align-items:center;
             gap:.5rem;
-            background:rgba(255,101,132,0.12);
-            border:1px solid rgba(255,101,132,0.3);
+            background:#FEF2F2;
+            border:1px solid #FECACA;
             color:var(--accent-red);
         }
     </style>
@@ -183,7 +183,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('register.post') }}">
+    <form method="POST" action="{{ route('register') }}">
         @csrf
 
         <div class="form-group">
@@ -218,7 +218,7 @@
             <div class="input-wrap">
                 <span class="material-icons-round">lock</span>
                 <input type="password" name="password" id="password" class="form-control"
-                       placeholder="Minimum 6 caractères" required>
+                       placeholder="Minimum 8 caractères" required>
             </div>
         </div>
 

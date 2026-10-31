@@ -12,12 +12,12 @@ use App\Models\User;
 class AuthController extends Controller
 {
     /**
-     * Connexion utilisateur
+     * Connexion utilisateur (API Sanctum)
      */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -26,26 +26,29 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Identifiants incorrects. Veuillez vérifier votre e-mail et mot de passe.'
+                'message' => 'Identifiants incorrects. Veuillez vérifier votre e-mail et mot de passe.',
             ], 401);
         }
 
-        // Token fictif pour session REST
-        $token = bin2hex(random_bytes(32));
+        // Révoquer les anciens tokens de ce device
+        $user->tokens()->where('name', 'api-token')->delete();
+
+        $token = $user->createToken('api-token', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Connexion réussie !',
-            'data' => [
+            'data'    => [
                 'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
+                'user'  => [
+                    'id'         => $user->id,
+                    'name'       => $user->name,
+                    'email'      => $user->email,
+                    'role'       => $user->role,
+                    'avatar_url' => $user->avatar_url,
                     'created_at' => $user->created_at,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -55,34 +58,42 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'role' => 'nullable|string|in:user,atelier,association,admin',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role'     => 'nullable|string|in:user,atelier,association',
+        ], [
+            'name.required'     => 'Le nom est obligatoire.',
+            'email.required'    => 'L\'adresse e-mail est obligatoire.',
+            'email.unique'      => 'Cette adresse e-mail est déjà utilisée.',
+            'password.min'      => 'Le mot de passe doit contenir au moins 8 caractères.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'user',
+            'role'     => $request->role ?? 'user',
         ]);
 
-        $token = bin2hex(random_bytes(32));
+        $user->sendEmailVerificationNotification();
+
+        $token = $user->createToken('api-token', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Compte créé avec succès !',
-            'data' => [
+            'message' => 'Compte créé avec succès ! Veuillez vérifier votre e-mail.',
+            'data'    => [
                 'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'created_at' => $user->created_at,
-                ]
-            ]
+                'user'  => [
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'role'              => $user->role,
+                    'email_verified_at' => $user->email_verified_at,
+                    'created_at'        => $user->created_at,
+                ],
+            ],
         ], 201);
     }
 
@@ -91,27 +102,70 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié.',
+            ], 401);
+        }
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'user' => $request->user() ?? [
-                    'id' => 1,
-                    'name' => 'Utilisateur Eco',
-                    'email' => 'eco@textilecycle.fr',
-                    'role' => 'user'
-                ]
-            ]
+            'data'    => [
+                'user' => [
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'role'              => $user->role,
+                    'avatar_url'        => $user->avatar_url,
+                    'email_verified_at' => $user->email_verified_at,
+                    'two_factor_enabled' => $user->two_factor_enabled,
+                    'created_at'        => $user->created_at,
+                ],
+            ],
         ]);
     }
 
     /**
-     * Déconnexion
+     * Déconnexion (révocation du token Sanctum)
      */
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user) {
+            $user->currentAccessToken()?->delete();
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Déconnexion réussie.'
+            'message' => 'Déconnexion réussie.',
+        ]);
+    }
+
+    /**
+     * Mise à jour du profil via API
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Non authentifié.'], 401);
+        }
+
+        $validated = $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil mis à jour.',
+            'data'    => ['user' => $user->fresh()],
         ]);
     }
 }
