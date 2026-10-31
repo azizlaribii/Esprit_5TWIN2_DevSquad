@@ -29,12 +29,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [\Laravel\Fortify\Http\Controllers\RegisteredUserController::class, 'store'])->name('register.post');
 
 
-// ── Gestion du circuit textile
-Route::post('depots/analyser', [DepotController::class, 'analyser'])->name('depots.analyser');
-Route::resource('depots', DepotController::class);
-Route::get('/reparations',   [DashboardViewController::class, 'reparations'])->name('reparations.index');
-Route::get('/dons',          [DashboardViewController::class, 'dons'])->name('dons.index');
-=======
+
+
     // Reset mot de passe
     Route::get('/forgot-password',         [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password',        [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
