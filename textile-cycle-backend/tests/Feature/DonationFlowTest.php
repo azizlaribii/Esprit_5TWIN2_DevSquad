@@ -156,6 +156,7 @@ class DonationFlowTest extends TestCase
     {
         return User::forceCreate([
             'name' => ucfirst($role), 'email' => $email, 'password' => bcrypt('password'), 'role' => $role,
+            'email_verified_at' => now(),
         ]);
     }
 }

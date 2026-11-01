@@ -13,7 +13,7 @@ class ValidationMessagesTest extends TestCase
 
     public function test_donation_form_shows_french_errors_per_field(): void
     {
-        $donor = User::forceCreate(['name' => 'Donateur', 'email' => 'd@example.test', 'password' => bcrypt('password'), 'role' => 'user']);
+        $donor = User::forceCreate(['name' => 'Donateur', 'email' => 'd@example.test', 'password' => bcrypt('password'), 'role' => 'user', 'email_verified_at' => now()]);
 
         $this->actingAs($donor)
             ->from(route('donations.create'))
