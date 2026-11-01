@@ -2,7 +2,9 @@
 # Lancer TexTileCycle avec Docker :
 #     docker compose up --build
 # Application : http://localhost:8000
-# Comptes de demo : voir le document DevOps / README
+#
+# Avec TOUS les services IA (analytique 8001, depot 8002, reparation 5000) :
+#     docker compose --profile ai up --build
 # =============================================================================
 services:
   db:
@@ -18,7 +20,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    # Port 3307 cote Windows pour ne pas entrer en conflit avec XAMPP (3306)
     ports:
       - "3307:3306"
 
@@ -44,20 +45,40 @@ services:
       SESSION_DRIVER: file
       CACHE_DRIVER: file
       AI_SERVICE_URL: http://ai:8001
+      AI_SERVICE_SECRET: textilecycle_secret_key_2026
+      DEPOT_AI_URL: http://depot-ai:8002
+      FLASK_AI_URL: http://reparation-ai:5000
       RUN_MIGRATIONS: "true"
     ports:
       - "8000:80"
     volumes:
       - app_storage:/var/www/html/storage/app
 
-  # Service IA analytique (optionnel) : docker compose --profile ai up --build
   ai:
     profiles: ["ai"]
     build:
       context: ./textile-cycle-ai
     container_name: textilecycle-ai
+    environment:
+      AI_SERVICE_SECRET: textilecycle_secret_key_2026
     ports:
       - "8001:8001"
+
+  depot-ai:
+    profiles: ["ai"]
+    build:
+      context: ./depot-ai-service
+    container_name: textilecycle-depot-ai
+    ports:
+      - "8002:8002"
+
+  reparation-ai:
+    profiles: ["ai"]
+    build:
+      context: ./ai-service/reparation-ai-service
+    container_name: textilecycle-reparation-ai
+    ports:
+      - "5000:5000"
 
 volumes:
   db_data:
