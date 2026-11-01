@@ -44,7 +44,7 @@ class DonationDeleteTest extends TestCase
     public function test_other_user_cannot_delete(): void
     {
         $donation = Donation::factory()->create();
-        $other    = User::forceCreate(['name' => 'Autre', 'email' => 'autre@example.test', 'password' => bcrypt('password'), 'role' => 'user']);
+        $other    = User::forceCreate(['name' => 'Autre', 'email' => 'autre@example.test', 'password' => bcrypt('password'), 'role' => 'user', 'email_verified_at' => now()]);
 
         $this->actingAs($other)->delete(route('donations.destroy', $donation))->assertForbidden();
     }

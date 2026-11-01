@@ -16,13 +16,17 @@ class MarketplaceBladeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::create([
+        $this->user = User::forceCreate([
             'id' => 1,
             'name' => 'Marie Testeur',
             'email' => 'marie.test@example.com',
             'password' => bcrypt('password123'),
             'role' => 'user',
+            'email_verified_at' => now(),
         ]);
+
+        // Les pages du marketplace exigent maintenant auth + email vérifié + 2FA
+        $this->actingAs($this->user);
     }
 
     public function test_marketplace_index_page_loads_with_blade_layout(): void
@@ -86,7 +90,7 @@ class MarketplaceBladeTest extends TestCase
         $this->assertNotNull($article->ai_prix_min);
         $this->assertNotNull($article->ai_prix_max);
 
-        $response->assertRedirect(route('marketplace.show', $article));
+        $response->assertRedirect(route('marketplace.mes-articles'));
     }
 
     public function test_marketplace_show_page(): void
@@ -109,7 +113,8 @@ class MarketplaceBladeTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Robe d\'été fleurie coton');
-        $response->assertSee('Faire une demande');
+        // Le propriétaire voit un message à la place du bouton d'achat
+        $response->assertSee('Votre propre produit');
     }
 
     public function test_marketplace_edit_and_update(): void
@@ -142,7 +147,7 @@ class MarketplaceBladeTest extends TestCase
             'prix' => 28,
         ]);
 
-        $updateResponse->assertRedirect(route('marketplace.show', $article));
+        $updateResponse->assertRedirect(route('marketplace.mes-articles'));
         $this->assertDatabaseHas('articles_marketplace', [
             'id' => $article->id,
             'titre' => 'Pull en laine mérinos col V (Mis à jour)',
@@ -166,7 +171,7 @@ class MarketplaceBladeTest extends TestCase
 
         $response = $this->actingAs($this->user)->delete(route('marketplace.destroy', $article));
 
-        $response->assertRedirect(route('marketplace.index'));
+        $response->assertRedirect(route('marketplace.mes-articles'));
         $this->assertDatabaseMissing('articles_marketplace', [
             'id' => $article->id,
         ]);

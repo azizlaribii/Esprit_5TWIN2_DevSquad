@@ -158,7 +158,7 @@ class DonationAnalyzerTest extends TestCase
         Http::fake();
         config(['textilecycle.ai.key' => null]);
 
-        $assocUser = User::forceCreate(['name' => 'Asso', 'email' => 'asso@example.test', 'password' => bcrypt('x'), 'role' => 'association']);
+        $assocUser = User::forceCreate(['name' => 'Asso', 'email' => 'asso@example.test', 'password' => bcrypt('x'), 'role' => 'association', 'email_verified_at' => now()]);
         $association = Association::create([
             'user_id' => $assocUser->id, 'name' => 'Association test', 'city' => 'Tunis',
             'lat' => 36.8065, 'lng' => 10.1815, 'capacity' => 100,
