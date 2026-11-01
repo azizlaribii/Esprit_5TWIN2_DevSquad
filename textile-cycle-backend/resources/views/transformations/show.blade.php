@@ -15,7 +15,7 @@
     <div class="card">
         <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem">
             <span class="badge {{ $transformation->statut_badge }}">{{ $transformation->statut_label }}</span>
-            <span class="badge badge-primary">{{ $transformation->type_projet }}</span>
+            <span class="badge badge-primary"><span class="material-icons-round" style="font-size:.9rem">{{ $transformation->categorie?->icone ?? 'category' }}</span> {{ $transformation->categorie?->nom ?? $transformation->type_projet }}</span>
             @if($transformation->difficulte_label)<span class="badge badge-info">Difficulté : {{ $transformation->difficulte_label }}</span>@endif
             @if($transformation->duree_estimee)<span class="badge badge-warning">⏱ {{ $transformation->duree_estimee }}</span>@endif
             @if($transformation->genere_par_ia)<span class="ai-badge">Idée IA</span>@endif

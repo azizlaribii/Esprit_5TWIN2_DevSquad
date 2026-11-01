@@ -11,6 +11,8 @@ class TransformationSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(CategorieUpcyclingSeeder::class);
+
         $users = User::take(3)->get();
         if ($users->isEmpty()) {
             $users = User::factory(3)->create();

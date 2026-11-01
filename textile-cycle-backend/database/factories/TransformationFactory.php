@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\CategorieUpcycling;
 use App\Models\Transformation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,7 @@ class TransformationFactory extends Factory
             'depot_id'      => null,
             'titre'         => $titre,
             'type_projet'   => $type,
+            'categorie_id'  => CategorieUpcycling::firstOrCreate(['nom' => $type], ['actif' => true])->id,
             'description'   => $this->faker->sentence(14),
             'difficulte'    => $this->faker->randomElement(array_keys(Transformation::DIFFICULTES)),
             'duree_estimee' => $this->faker->randomElement(['45 min', '1 h', '2 h', '3 h']),

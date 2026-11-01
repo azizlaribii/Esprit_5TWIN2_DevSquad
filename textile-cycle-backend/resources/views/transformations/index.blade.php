@@ -41,7 +41,7 @@
                     </div>
 
                     <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.75rem">
-                        <span class="badge badge-primary">{{ $t->type_projet }}</span>
+                        <span class="badge badge-primary"><span class="material-icons-round" style="font-size:.9rem">{{ $t->categorie?->icone ?? 'category' }}</span> {{ $t->categorie?->nom ?? $t->type_projet }}</span>
                         @if($t->difficulte_label)<span class="badge badge-info">{{ $t->difficulte_label }}</span>@endif
                         @if($t->genere_par_ia)<span class="ai-badge">IA</span>@endif
                     </div>
