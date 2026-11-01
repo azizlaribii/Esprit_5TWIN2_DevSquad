@@ -25,11 +25,22 @@ class Valorisation extends Model
 
     protected $fillable = [
         'depot_id', 'filiere', 'statut', 'estimation_prix', 'commentaire', 'source',
+        'motif_refus', 'traite_par', 'traite_le',
+    ];
+
+    protected $casts = [
+        'traite_le' => 'datetime',
     ];
 
     public function depot()
     {
         return $this->belongsTo(Depot::class);
+    }
+
+    /** Administrateur qui a validé ou refusé la valorisation. */
+    public function traitePar()
+    {
+        return $this->belongsTo(User::class, 'traite_par');
     }
 
     public function estGerablePar(?User $user): bool

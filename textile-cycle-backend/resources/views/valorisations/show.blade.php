@@ -48,6 +48,14 @@
             <p style="margin-bottom:1.5rem">{{ $valorisation->commentaire }}</p>
         @endif
 
+
+@if($valorisation->statut === 'refusee' && $valorisation->motif_refus)
+    <div class="alert alert-danger" style="margin-bottom:1.5rem">
+        <div><strong>Valorisation refusée</strong><div>{{ $valorisation->motif_refus }}</div></div>
+    </div>
+@endif
+
+
         <div style="display:flex;gap:.75rem;flex-wrap:wrap">
             <a href="{{ route('valorisations.edit', $valorisation) }}" class="btn btn-primary">Modifier</a>
             <a href="{{ route('valorisations.index') }}" class="btn btn-secondary">Retour</a>

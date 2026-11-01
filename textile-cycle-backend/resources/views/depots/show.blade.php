@@ -79,6 +79,15 @@
         <p style="color:var(--text-muted);font-size:.85rem">Aucune valorisation pour ce dépôt.</p>
     @endforelse
 </div>
+
+@if($depot->statut === 'refuse' && $depot->motif_refus)
+    <div class="alert alert-danger" style="margin-bottom:1.5rem">
+        <div><strong>Dépôt refusé</strong><div>{{ $depot->motif_refus }}</div></div>
+    </div>
+@endif
+
+
+
 <div style="display:flex;gap:.75rem;flex-wrap:wrap">
     @if($depot->estGerablePar(auth()->user()))
         <a href="{{ route('depots.edit', $depot) }}" class="btn btn-primary">Modifier</a>
