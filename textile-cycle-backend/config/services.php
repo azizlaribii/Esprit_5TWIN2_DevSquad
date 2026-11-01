@@ -12,6 +12,6 @@ return [
         'url' => env('FLASK_AI_URL', 'http://127.0.0.1:5000'),
     ],
     'depot_ai' => [
-    'url' => env('DEPOT_AI_URL', 'http://127.0.0.1:8002'),
-],
+        'url' => env('DEPOT_AI_URL', 'http://127.0.0.1:5001'),
+    ],
 ];

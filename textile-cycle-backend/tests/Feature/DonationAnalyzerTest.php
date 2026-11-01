@@ -8,6 +8,7 @@ use App\Models\Donation;
 use App\Models\User;
 use App\Services\DonationAnalyzer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -67,6 +68,80 @@ class DonationAnalyzerTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_donation_photo_analysis_maps_depot_ai_values_to_textile_fields(): void
+    {
+        Http::fake([
+            '*analyze-depot' => Http::response([
+                'is_garment' => true,
+                'type' => 'Vestes & Manteaux',
+                'etat' => 'Très bon état',
+                'couleur' => 'bleu',
+                'matiere' => 'coton',
+                'confiance' => 91.2,
+            ]),
+        ]);
+
+        $donation = $this->donation();
+
+        $this->actingAs(User::findOrFail($donation->user_id))
+            ->postJson(route('donations.analyser'), [
+                'photo' => UploadedFile::fake()->createWithContent('manteau.png', base64_decode(self::PNG)),
+            ])
+            ->assertOk()
+            ->assertJson([
+                'is_garment' => true,
+                'category' => 'manteau',
+                'condition' => 'bon',
+                'type' => 'Vestes & Manteaux',
+                'couleur' => 'bleu',
+                'matiere' => 'coton',
+            ]);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/analyze-depot'));
+    }
+
+    public function test_donation_photo_analysis_reports_non_garments(): void
+    {
+        Http::fake([
+            '*analyze-depot' => Http::response([
+                'is_garment' => false,
+                'verdict' => 'non_vetement',
+                'message' => 'Cette photo ne semble pas être un vêtement.',
+                'confiance' => 96.0,
+            ]),
+        ]);
+
+        $donation = $this->donation();
+
+        $this->actingAs(User::findOrFail($donation->user_id))
+            ->postJson(route('donations.analyser'), [
+                'photo' => UploadedFile::fake()->createWithContent('objet.png', base64_decode(self::PNG)),
+            ])
+            ->assertOk()
+            ->assertJson([
+                'is_garment' => false,
+                'message' => 'Cette photo ne semble pas être un vêtement.',
+            ]);
+    }
+
+    public function test_donation_photo_analysis_reports_service_unavailability(): void
+    {
+        Http::fake([
+            '*analyze-depot' => Http::response(['detail' => 'Service unavailable'], 503),
+        ]);
+
+        $donation = $this->donation();
+
+        $this->actingAs(User::findOrFail($donation->user_id))
+            ->postJson(route('donations.analyser'), [
+                'photo' => UploadedFile::fake()->createWithContent('manteau.png', base64_decode(self::PNG)),
+            ])
+            ->assertStatus(503)
+            ->assertJson([
+                'message' => 'Service IA indisponible. Vous pouvez remplir les caractéristiques manuellement.',
+            ]);
+    }
+
     public function test_job_falls_back_to_manual_review_when_ai_cannot_help(): void
     {
         Http::fake();
@@ -120,7 +195,7 @@ class DonationAnalyzerTest extends TestCase
 
         $user = User::forceCreate([
             'name' => 'Donateur', 'email' => 'donateur' . uniqid() . '@example.test',
-            'password' => bcrypt('x'), 'role' => 'user',
+            'password' => bcrypt('x'), 'role' => 'user', 'email_verified_at' => now(),
         ]);
 
         $donation = Donation::create(array_merge([
