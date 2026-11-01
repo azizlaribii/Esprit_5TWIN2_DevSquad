@@ -109,6 +109,19 @@ Route::middleware(['auth', 'verified', '2fa'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
         Route::post('users/{user}/toggle-2fa', [\App\Http\Controllers\Admin\UserController::class, 'toggleTwoFactor'])->name('users.toggle-2fa');
+
+          // ── BackOffice dépôts et valorisations ──
+    Route::get('depots', [\App\Http\Controllers\Admin\DepotAdminController::class, 'index'])->name('depots.index');
+    Route::get('depots/{depot}', [\App\Http\Controllers\Admin\DepotAdminController::class, 'show'])->name('depots.show');
+    Route::post('depots/{depot}/valider', [\App\Http\Controllers\Admin\DepotAdminController::class, 'valider'])->name('depots.valider');
+    Route::post('depots/{depot}/refuser', [\App\Http\Controllers\Admin\DepotAdminController::class, 'refuser'])->name('depots.refuser');
+    Route::post('depots/{depot}/traiter', [\App\Http\Controllers\Admin\DepotAdminController::class, 'traiter'])->name('depots.traiter');
+
+    Route::get('valorisations', [\App\Http\Controllers\Admin\DepotAdminController::class, 'valorisations'])->name('valorisations.index');
+    Route::post('valorisations/{valorisation}/valider', [\App\Http\Controllers\Admin\DepotAdminController::class, 'validerValorisation'])->name('valorisations.valider');
+    Route::post('valorisations/{valorisation}/refuser', [\App\Http\Controllers\Admin\DepotAdminController::class, 'refuserValorisation'])->name('valorisations.refuser');
+    Route::post('valorisations/{valorisation}/realiser', [\App\Http\Controllers\Admin\DepotAdminController::class, 'realiserValorisation'])->name('valorisations.realiser');
+        
     });
 
     require __DIR__.'/don.php';

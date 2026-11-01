@@ -19,6 +19,18 @@
                 <span class="nav-badge" style="background:var(--primary)">Admin</span>
             </a>
 
+
+            <a href="{{ route('admin.depots.index') }}" class="nav-item {{ request()->is('admin/depots*') ? 'active' : '' }}">
+                <span class="nav-icon material-icons-round">inventory_2</span>
+                <span class="nav-label">Modération Dépôts</span>
+            </a>
+            <a href="{{ route('admin.valorisations.index') }}" class="nav-item {{ request()->is('admin/valorisations*') ? 'active' : '' }}">
+                <span class="nav-icon material-icons-round">autorenew</span>
+                <span class="nav-label">Modération Valorisations</span>
+            </a>
+
+
+
             <div class="nav-section-label">Mon Compte</div>
             <a href="/profile" class="nav-item {{ request()->is('profile*') ? 'active' : '' }}">
                 <span class="nav-icon material-icons-round">person</span>
@@ -63,6 +75,13 @@
                 <span class="nav-icon material-icons-round">inventory_2</span>
                 <span class="nav-label">Dépôts</span>
             </a>
+
+                        <a href="{{ route('valorisations.index') }}" class="nav-item {{ request()->is('valorisations*') ? 'active' : '' }}">
+                <span class="nav-icon material-icons-round">autorenew</span>
+                <span class="nav-label">Valorisations</span>
+            </a>
+
+
             <a href="/reparations" class="nav-item {{ request()->is('reparations*') ? 'active' : '' }}">
                 <span class="nav-icon material-icons-round">build</span>
                 <span class="nav-label">Réparations</span>
