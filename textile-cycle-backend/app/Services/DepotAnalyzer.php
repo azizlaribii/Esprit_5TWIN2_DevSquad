@@ -20,9 +20,14 @@ class DepotAnalyzer
                 ->post(config('services.depot_ai.url') . '/analyze-depot');
 
             if ($response->failed()) {
-                return null;
+    Log::warning('DepotAnalyzer: réponse en erreur', [
+        'status' => $response->status(),
+        'body'   => $response->body(),
+    ]);
+    return null;
             }
-
+Log::info('DepotAnalyzer: réponse IA', $response->json() ?? []);
+return $response->json();
             return $response->json();
         } catch (\Throwable $e) {
             Log::warning('DepotAnalyzer indisponible : ' . $e->getMessage());

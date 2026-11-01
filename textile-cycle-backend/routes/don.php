@@ -50,6 +50,7 @@ Route::prefix('don-intelligent')->group(function () {
 
         // ---- Formulaire de don (accessible à tout utilisateur authentifié) ----
         Route::get('/dons/nouveau', [DonationController::class, 'create'])->name('donations.create');
+        Route::post('/dons/analyser', [DonationController::class, 'analyser'])->name('donations.analyser');
         Route::post('/dons', [DonationController::class, 'store'])
             ->middleware('throttle:20,1')
             ->name('donations.store');

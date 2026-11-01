@@ -232,6 +232,8 @@
 
         {{-- Preview --}}
         <div id="photo-preview" style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem"></div>
+        <p id="photo-analysis-status" role="status" aria-live="polite"
+           style="display:none;color:var(--text-muted);font-size:.82rem;margin:.5rem 0 0"></p>
         @include('don.partials.field-error', ['name' => 'photos'])
         @foreach ($errors->get('photos.*') as $photoErrors)
             @foreach ($photoErrors as $photoError)
@@ -546,6 +548,62 @@ function handleFiles(files) {
         };
         reader.readAsDataURL(file);
     });
+
+    if (files.length > 0) {
+        analyzeDonationPhoto(files[0]);
+    }
+}
+
+let donationAnalysisController;
+
+async function analyzeDonationPhoto(file) {
+    const status = document.getElementById('photo-analysis-status');
+    status.style.display = 'block';
+    status.textContent = 'Analyse de la première photo en cours…';
+    donationAnalysisController?.abort();
+    donationAnalysisController = new AbortController();
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+        const response = await fetch('{{ route('donations.analyser') }}', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+            },
+            body: formData,
+            signal: donationAnalysisController.signal
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `Erreur HTTP ${response.status}`);
+        }
+
+        if (data.is_garment === false) {
+            status.textContent = `${data.message} Vous pouvez quand même compléter le formulaire manuellement.`;
+            return;
+        }
+
+        const category = document.getElementById('category');
+        const condition = document.getElementById('condition');
+        if (!category.value && [...category.options].some(option => option.value === data.category)) {
+            category.value = data.category;
+        }
+        if (!condition.value && [...condition.options].some(option => option.value === data.condition)) {
+            condition.value = data.condition;
+        }
+
+        const details = [data.type, data.couleur, data.matiere].filter(Boolean).join(' · ');
+        status.textContent = `Caractéristiques détectées : ${details || 'catégorie et état'}. Vérifiez les champs préremplis et complétez les autres si nécessaire.`;
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return;
+        }
+        status.textContent = `${error.message || 'Erreur pendant l’analyse.'} Vous pouvez remplir les caractéristiques manuellement.`;
+    }
 }
 
 // Drag-over visual

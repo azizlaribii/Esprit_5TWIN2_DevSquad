@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Jobs\AnalyzeDonation;
 use App\Models\Association;
 use App\Models\Donation;
+use App\Services\DepotAnalyzer;
 use App\Services\Geocoder;
 use App\Support\Textile;
 use App\Support\ValidationMessages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -34,6 +36,53 @@ class DonationController extends Controller
     {
         $associations = Association::orderBy('nom')->get();
         return view('don.donations.create', compact('associations'));
+    }
+
+    public function analyser(Request $request, DepotAnalyzer $analyzer): JsonResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $result = $analyzer->analyze($request->file('photo'));
+
+        if ($result === null) {
+            return response()->json([
+                'message' => 'Service IA indisponible. Vous pouvez remplir les caractéristiques manuellement.',
+            ], 503);
+        }
+
+        if (($result['is_garment'] ?? true) === false || ($result['verdict'] ?? null) === 'non_vetement') {
+            return response()->json([
+                'is_garment' => false,
+                'message' => $result['message'] ?? 'Cette photo ne semble pas représenter un vêtement.',
+            ]);
+        }
+
+        $category = $this->textileCategory($result);
+        $condition = match ($result['etat'] ?? null) {
+            'Neuf avec étiquette' => 'neuf',
+            'Très bon état', 'Bon état' => 'bon',
+            'État correct', 'Usé' => 'usage',
+            'A réparer', 'À réparer' => 'a_reparer',
+            default => null,
+        };
+
+        if ($category === null || $condition === null) {
+            return response()->json([
+                'message' => 'La réponse IA ne contient pas de caractéristiques reconnues. Vous pouvez les remplir manuellement.',
+            ], 502);
+        }
+
+        return response()->json([
+            'is_garment' => true,
+            'category' => $category,
+            'condition' => $condition,
+            'confidence' => $result['confiance'] ?? null,
+            'type' => $result['type'] ?? $result['categorie'] ?? null,
+            'couleur' => $result['couleur'] ?? null,
+            'matiere' => $result['matiere'] ?? null,
+        ]);
     }
 
     public function store(Request $request, Geocoder $geocoder): RedirectResponse
@@ -181,5 +230,25 @@ class DonationController extends Controller
         }
 
         return $geocoder->lookup($data['city']) ?? [];
+    }
+
+    private function textileCategory(array $result): ?string
+    {
+        $type = mb_strtolower((string) ($result['type'] ?? $result['categorie'] ?? ''));
+        $title = mb_strtolower((string) ($result['titre_suggere'] ?? ''));
+
+        if (str_contains($title, 'pull') || str_contains($title, 'sweat')) {
+            return 'pull';
+        }
+
+        return match (true) {
+            str_contains($type, 'manteau'), str_contains($type, 'veste') => 'manteau',
+            str_contains($type, 'jean'), str_contains($type, 'pantalon') => 'pantalon',
+            str_contains($type, 'robe'), str_contains($type, 'jupe') => 'robe_jupe',
+            str_contains($type, 'chaussure') => 'chaussures',
+            str_contains($type, 'accessoire') => 'accessoires',
+            str_contains($type, 't-shirt'), str_contains($type, 'top'), str_contains($type, 'sportswear') => 'haut',
+            default => null,
+        };
     }
 }
