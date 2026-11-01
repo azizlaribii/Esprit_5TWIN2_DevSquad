@@ -1,0 +1,64 @@
+# Supervision : Prometheus + Grafana (+ exporters).
+# S'ajoute a docker-compose.yml :
+#   docker compose -f docker-compose.yml -f docker-compose.monitoring.yml --profile monitoring up --build
+services:
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:v2.54.1
+    container_name: textilecycle-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    profiles: ["monitoring"]
+    image: grafana/grafana:11.2.0
+    container_name: textilecycle-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  blackbox:
+    profiles: ["monitoring"]
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: textilecycle-blackbox
+    volumes:
+      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+
+  mysqld-exporter:
+    profiles: ["monitoring"]
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: textilecycle-mysqld-exporter
+    command:
+      - "--config.my-cnf=/etc/mysqld-exporter/my.cnf"
+    volumes:
+      - ./monitoring/mysqld-exporter.cnf:/etc/mysqld-exporter/my.cnf:ro
+    depends_on:
+      - db
+
+  cadvisor:
+    profiles: ["monitoring"]
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: textilecycle-cadvisor
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8081:8080"
+
+volumes:
+  prometheus_data:
+  grafana_data:

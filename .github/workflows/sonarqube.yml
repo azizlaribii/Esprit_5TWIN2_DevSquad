@@ -1,0 +1,50 @@
+# Analyse de qualite du code avec SonarCloud (SonarQube heberge, gratuit sur depot public).
+# Prerequis : secret SONAR_TOKEN dans GitHub (Settings > Secrets and variables > Actions).
+name: SonarQube
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: sonar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonarqube:
+    name: Analyse SonarQube + couverture PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le code (historique complet, requis par Sonar)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer PHP 8.3 avec pilote de couverture PCOV
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, gd, zip, bcmath, pdo_sqlite
+          coverage: pcov
+
+      - name: Installer les dependances
+        working-directory: textile-cycle-backend
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Preparer l'environnement
+        working-directory: textile-cycle-backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Lancer les tests avec rapport de couverture
+        working-directory: textile-cycle-backend
+        run: vendor/bin/phpunit --coverage-clover coverage.xml
+
+      - name: Analyse SonarQube
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
