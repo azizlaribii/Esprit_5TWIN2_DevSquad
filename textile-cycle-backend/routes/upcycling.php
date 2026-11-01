@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategorieUpcyclingController;
 use App\Http\Controllers\TransformationController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// ---- FrontOffice : projets de transformation (table 1) ----
 Route::middleware('auth')->prefix('upcycling')->group(function () {
     Route::post('/idees', [TransformationController::class, 'suggest'])
         ->middleware('throttle:10,1')
@@ -18,4 +20,12 @@ Route::middleware('auth')->prefix('upcycling')->group(function () {
     Route::resource('projets', TransformationController::class)
         ->parameters(['projets' => 'transformation'])
         ->names('transformations');
+});
+
+// ---- BackOffice : catégories d'upcycling (table 2), réservé à l'admin ----
+Route::middleware(['auth', 'role:admin'])->prefix('upcycling/admin')->group(function () {
+    Route::resource('categories', CategorieUpcyclingController::class)
+        ->except('show')
+        ->parameters(['categories' => 'categorie'])
+        ->names('admin.categories');
 });

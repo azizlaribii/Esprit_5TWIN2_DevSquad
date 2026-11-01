@@ -27,6 +27,7 @@ class Transformation extends Model
     protected $fillable = [
         'user_id',
         'depot_id',
+        'categorie_id',
         'titre',
         'type_projet',
         'description',
@@ -52,6 +53,12 @@ class Transformation extends Model
     public function depot(): BelongsTo
     {
         return $this->belongsTo(Depot::class);
+    }
+
+    // Relation N-1 : un projet appartient à une catégorie (gérée par l'admin)
+    public function categorie(): BelongsTo
+    {
+        return $this->belongsTo(CategorieUpcycling::class, 'categorie_id');
     }
 
     public function getStatutLabelAttribute(): string
