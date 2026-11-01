@@ -36,9 +36,9 @@
                     </div>
                     <div>
                         <div class="form-label">Statut</div>
-                        <span class="badge {{ $depot->statut === 'valide' ? 'badge-success' : 'badge-warning' }}">
-                            {{ ucfirst(str_replace('_', ' ', $depot->statut)) }}
-                        </span>
+                      <span class="badge {{ ['valide' => 'badge-success', 'refuse' => 'badge-danger', 'traite' => 'badge-info'][$depot->statut] ?? 'badge-warning' }}">
+    {{ \App\Models\Depot::STATUTS[$depot->statut] ?? $depot->statut }}
+</span>
                     </div>
                 </div>
 
@@ -60,20 +60,52 @@
         </div>
     </div>
 @endif
+<div style="margin-bottom:1.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <div class="form-label" style="margin:0">Valorisations ({{ $depot->valorisations->count() }})</div>
+        @if(auth()->check() && (auth()->id() === $depot->user_id || auth()->user()->role === 'admin'))
+            <a href="{{ route('valorisations.create', ['depot_id' => $depot->id]) }}" class="btn btn-secondary btn-sm">+ Ajouter</a>
+        @endif
+    </div>
+    @forelse($depot->valorisations as $v)
+        <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem">
+            <span class="badge badge-primary">{{ \App\Models\Valorisation::FILIERES[$v->filiere] ?? $v->filiere }}</span>
+            <span class="badge badge-warning">{{ \App\Models\Valorisation::STATUTS[$v->statut] ?? $v->statut }}</span>
+            @if($v->estimation_prix !== null) <span>{{ number_format($v->estimation_prix, 2) }} DT</span> @endif
+            @if($v->source === 'ia') <span class="ai-badge">IA</span> @endif
+            @auth <a href="{{ route('valorisations.show', $v) }}" style="font-size:.8rem">Voir</a> @endauth
+        </div>
+    @empty
+        <p style="color:var(--text-muted);font-size:.85rem">Aucune valorisation pour ce dépôt.</p>
+    @endforelse
+</div>
+
+@if($depot->statut === 'refuse' && $depot->motif_refus)
+    <div class="alert alert-danger" style="margin-bottom:1.5rem">
+        <div><strong>Dépôt refusé</strong><div>{{ $depot->motif_refus }}</div></div>
+    </div>
+@endif
+
+
+
 <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-    <a href="{{ route('depots.edit', $depot) }}" class="btn btn-primary">Modifier</a>
+    @if($depot->estGerablePar(auth()->user()))
+        <a href="{{ route('depots.edit', $depot) }}" class="btn btn-primary">Modifier</a>
+    @endif
     <a href="{{ route('depots.index') }}" class="btn btn-secondary">Retour</a>
 
-    <form method="POST" action="{{ route('depots.destroy', $depot) }}"
-          data-confirm
-          data-confirm-type="danger"
-          data-confirm-title="Supprimer le dépôt #{{ $depot->id }} ?"
-          data-confirm-message="Vous allez supprimer définitivement le dépôt #{{ $depot->id }} ({{ $depot->categorie }}). Cette action est irréversible."
-          data-confirm-ok="Oui, supprimer">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger">Supprimer</button>
-    </form>
+    @if($depot->estGerablePar(auth()->user()))
+        <form method="POST" action="{{ route('depots.destroy', $depot) }}"
+              data-confirm
+              data-confirm-type="danger"
+              data-confirm-title="Supprimer le dépôt #{{ $depot->id }} ?"
+              data-confirm-message="Vous allez supprimer définitivement le dépôt #{{ $depot->id }} ({{ $depot->categorie }}). Cette action est irréversible."
+              data-confirm-ok="Oui, supprimer">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger">Supprimer</button>
+        </form>
+    @endif
 </div>
             </div>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TransformationRequest;
+use App\Models\CategorieUpcycling;
 use App\Models\Depot;
 use App\Models\Transformation;
 use App\Services\UpcyclingIdeaService;
@@ -15,7 +16,7 @@ class TransformationController extends Controller
 {
     public function index(Request $request): View
     {
-        $transformations = Transformation::with('depot')
+        $transformations = Transformation::with(['depot', 'categorie'])
             ->where('user_id', $request->user()->id)
             ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->input('statut')))
             ->latest()
@@ -29,7 +30,10 @@ class TransformationController extends Controller
 
     public function create(Request $request): View
     {
-        return view('transformations.create', ['depots' => $this->depotsOf($request)]);
+        return view('transformations.create', [
+            'depots'     => $this->depotsOf($request),
+            'categories' => $this->categories(),
+        ]);
     }
 
     public function store(TransformationRequest $request): RedirectResponse
@@ -44,7 +48,7 @@ class TransformationController extends Controller
     {
         $this->authorizeOwner($request, $transformation);
 
-        return view('transformations.show', ['transformation' => $transformation->load('depot')]);
+        return view('transformations.show', ['transformation' => $transformation->load(['depot', 'categorie'])]);
     }
 
     public function edit(Request $request, Transformation $transformation): View
@@ -54,6 +58,7 @@ class TransformationController extends Controller
         return view('transformations.edit', [
             'transformation' => $transformation,
             'depots'         => $this->depotsOf($request),
+            'categories'     => $this->categories(),
         ]);
     }
 
@@ -106,6 +111,9 @@ class TransformationController extends Controller
     {
         $data = $request->validated();
 
+        // Le champ texte historique « type_projet » suit le nom de la catégorie
+        $data['type_projet'] = CategorieUpcycling::findOrFail($data['categorie_id'])->nom;
+
         $data['materiaux'] = collect(explode(',', $data['materiaux'] ?? ''))
             ->map(fn ($m) => trim($m))
             ->filter()
@@ -115,6 +123,11 @@ class TransformationController extends Controller
         $data['genere_par_ia'] = $request->boolean('genere_par_ia');
 
         return $data;
+    }
+
+    private function categories()
+    {
+        return CategorieUpcycling::actives()->orderBy('nom')->get();
     }
 
     private function depotsOf(Request $request)

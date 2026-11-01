@@ -110,7 +110,9 @@ ETATS = {
     "Neuf avec étiquette": "a brand new garment with price tag attached, perfect store condition",
     "Très bon état": "a clean garment in excellent condition, crisp without any defect or stain",
     "Bon état": "a gently used clean garment in good wearable condition",
-    "État correct": "a used garment with minor signs of wash wear or slight fading"
+    "État correct": "a used garment with minor signs of wash wear or slight fading",
+    "A réparer": "a damaged garment with a hole, tear, missing button or broken zipper",
+    "Usé": "a heavily worn out, stained, faded or torn garment in poor condition",
 }
 
 MATIERES = {
@@ -136,6 +138,31 @@ CLIP_COLORS = {
     "rose": "a pink or light rose clothing item"
 }
 
+# ─── 3. RECOMMANDATION DE FILIÈRE ET DE PRIX ────────────────────────────────
+
+PRIX_BASE = {
+    "T-Shirts & Tops": 15, "Jeans & Pantalons": 30, "Vestes & Manteaux": 45,
+    "Robes & Jupes": 28, "Chaussures": 35, "Sportswear": 20, "Accessoires": 8,
+}
+FACTEUR_ETAT = {
+    "Neuf avec étiquette": 1.0, "Très bon état": 0.8, "Bon état": 0.55,
+    "État correct": 0.35, "A réparer": 0.25, "Usé": 0.1,
+}
+FILIERE_PAR_ETAT = {
+    "Neuf avec étiquette": "revente", "Très bon état": "revente", "Bon état": "revente",
+    "État correct": "don", "A réparer": "reparation", "Usé": "recyclage",
+}
+
+
+def recommander(type_, etat):
+    prix = round(PRIX_BASE.get(type_, 20) * FACTEUR_ETAT.get(etat, 0.3), 2)
+    filiere = FILIERE_PAR_ETAT.get(etat, "don")
+    if filiere == "revente" and prix < 8:
+        filiere = "don"
+    return filiere, prix
+
+
+# ─── 4. FONCTIONS UTILITAIRES ───────────────────────────────────────────────
 
 def is_garment_check(image: Image.Image) -> tuple[bool, float]:
     """Détermine si l'image représente un vêtement ou un élément non-textile (chat, chien, objet, etc.)."""
@@ -264,6 +291,8 @@ def classify_dict(image: Image.Image, options: dict) -> tuple[str, float]:
     return best_key, float(scores[best_key])
 
 
+# ─── 5. ROUTES ──────────────────────────────────────────────────────────────
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "depot-ai-enhanced"}
@@ -277,41 +306,30 @@ async def analyze(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="Image invalide")
 
-    # ── ÉTAPE 1 : VÉRIFICATION VÊTEMENT OU NON-VÊTEMENT (CHAT, CHIEN, OBJET, ETC.) ──
+    # ÉTAPE 1 : vêtement ou non ?
     is_garment, prob_garment = is_garment_check(image)
     if not is_garment:
         return {
             "is_garment": False,
             "verdict": "non_vetement",
-            "message": "Cette photo n'est pas une pièce de vêtement.",
+            "message": "Cette photo ne semble pas être un vêtement.",
             "confiance": round((1.0 - prob_garment) * 100, 1),
-            "dossier_suggere": None,
-            "titre_suggere": None,
-            "is_custom_dossier": False,
-            "nouveau_dossier": None
         }
 
-    # ── ÉTAPE 2 : CLASSIFICATION VÊTEMENT DÉTAILLÉE ──
+    # ÉTAPE 2 : catégorie
     categorie, conf_cat = classify_dict(image, CATEGORIES)
-
     if conf_cat < 0.38:
         return {
             "is_garment": False,
             "verdict": "non_vetement",
             "message": "Cette photo ne semble pas être un vêtement identifiable.",
             "confiance": round((1.0 - conf_cat) * 100, 1),
-            "dossier_suggere": None,
-            "titre_suggere": None,
-            "is_custom_dossier": False,
-            "nouveau_dossier": None
         }
 
-    # Sous-type, matière, état
     subtype, _ = classify_dict(image, SUBTYPES)
     matiere, _ = classify_dict(image, MATIERES)
     etat, _ = classify_dict(image, ETATS)
 
-    # Couleur
     color_cv = extract_dominant_color_cv(image)
     color_clip, _ = classify_dict(image, CLIP_COLORS)
     if color_cv in ["blanc", "noir", "gris"]:
@@ -319,76 +337,43 @@ async def analyze(file: UploadFile = File(...)):
     else:
         couleur = color_clip if color_clip in [color_cv, "bleu", "marron", "rouge", "vert"] else color_cv
 
-    # ── ÉTAPE 3 : DÉTERMINATION DU DOSSIER ET DE LA CATÉGORIE ──
-    # Les 4 dossiers pré-définis de base dans les boutons :
-    # T-shirt, Pantalon, Chaussures, Chaussettes
-    # Tout autre vêtement (Veste, Manteau, Robe, Jupe, Pull, etc.) génère un nouveau dossier suggéré !
+    # ÉTAPE 3 : dossier
     DEFAULT_DOSSIERS = ["T-shirt", "Pantalon", "Chaussures", "Chaussettes"]
-
     is_custom_dossier = False
     nouveau_dossier = None
+    sub = subtype.lower()
 
-    if categorie == "Chaussures" or "chaussure" in subtype.lower() or "basket" in subtype.lower():
-        dossier = "Chaussures"
-        categorie = "Chaussures"
-    elif "chaussette" in subtype.lower() or (categorie == "Accessoires" and "chaussette" in subtype.lower()):
-        dossier = "Chaussettes"
-        categorie = "Accessoires"
-    elif categorie == "Sportswear" or "jogging" in subtype.lower():
-        # Jogging / tracksuit → nouveau dossier suggéré car absent des 4 boutons de base
-        dossier = "Jogging & Sportswear"
-        categorie = "Sportswear"
-        is_custom_dossier = True
-        nouveau_dossier = "Jogging & Sportswear"
-    elif categorie == "Jeans & Pantalons" or "jean" in subtype.lower() or "pantalon" in subtype.lower() or "short" in subtype.lower():
-        dossier = "Pantalon"
-        categorie = "Jeans & Pantalons"
-    elif "t-shirt" in subtype.lower() or "polo" in subtype.lower():
-        dossier = "T-shirt"
-        categorie = "T-Shirts & Tops"
-    elif categorie == "Vestes & Manteaux" or "veste" in subtype.lower() or "manteau" in subtype.lower():
-        # Une veste / manteau n'appartient pas aux 4 boutons de base -> nouveau dossier suggéré !
-        dossier = "Vestes & Manteaux"
-        categorie = "Vestes & Manteaux"
-        is_custom_dossier = True
-        nouveau_dossier = "Vestes & Manteaux"
-    elif categorie == "Robes & Jupes" or "robe" in subtype.lower() or "jupe" in subtype.lower():
-        dossier = "Robes & Jupes"
-        categorie = "Robes & Jupes"
-        is_custom_dossier = True
-        nouveau_dossier = "Robes & Jupes"
-    elif "pull" in subtype.lower() or "sweat" in subtype.lower():
-        dossier = "Pulls & Sweats"
-        categorie = "T-Shirts & Tops"
-        is_custom_dossier = True
-        nouveau_dossier = "Pulls & Sweats"
+    if categorie == "Chaussures" or "chaussure" in sub or "basket" in sub:
+        dossier, categorie = "Chaussures", "Chaussures"
+    elif "chaussette" in sub:
+        dossier, categorie = "Chaussettes", "Accessoires"
+    elif categorie == "Sportswear" or "jogging" in sub:
+        dossier, categorie = "Jogging & Sportswear", "Sportswear"
+        is_custom_dossier, nouveau_dossier = True, dossier
+    elif categorie == "Jeans & Pantalons" or "jean" in sub or "pantalon" in sub or "short" in sub:
+        dossier, categorie = "Pantalon", "Jeans & Pantalons"
+    elif "t-shirt" in sub or "polo" in sub:
+        dossier, categorie = "T-shirt", "T-Shirts & Tops"
+    elif categorie == "Vestes & Manteaux" or "veste" in sub or "manteau" in sub:
+        dossier, categorie = "Vestes & Manteaux", "Vestes & Manteaux"
+        is_custom_dossier, nouveau_dossier = True, dossier
+    elif categorie == "Robes & Jupes" or "robe" in sub or "jupe" in sub:
+        dossier, categorie = "Robes & Jupes", "Robes & Jupes"
+        is_custom_dossier, nouveau_dossier = True, dossier
+    elif "pull" in sub or "sweat" in sub:
+        dossier, categorie = "Pulls & Sweats", "T-Shirts & Tops"
+        is_custom_dossier, nouveau_dossier = True, dossier
     else:
-        # Toute autre pièce textile
         dossier = categorie
         if dossier not in DEFAULT_DOSSIERS:
-            is_custom_dossier = True
-            nouveau_dossier = dossier
+            is_custom_dossier, nouveau_dossier = True, dossier
 
-    # Titre suggéré
     titre = f"{subtype} {couleur}"
-    if matiere and matiere not in ["coton"] and matiere.lower() not in subtype.lower():
+    if matiere and matiere != "coton" and matiere.lower() not in subtype.lower():
         titre += f" en {matiere}"
 
-    # Estimation prix
-    prix_est = {
-        "Chaussures": 45.0,
-        "Jeans & Pantalons": 35.0,
-        "Vestes & Manteaux": 55.0,
-        "Robes & Jupes": 35.0,
-        "Accessoires": 12.0,
-        "T-Shirts & Tops": 20.0,
-        "Sportswear": 30.0
-    }.get(categorie, 25.0)
-
-    if etat == "Neuf avec étiquette":
-        prix_est = round(prix_est * 1.3, 1)
-    elif etat == "État correct":
-        prix_est = round(prix_est * 0.75, 1)
+    # ÉTAPE 4 : recommandation de filière et de prix
+    filiere, prix = recommander(categorie, etat)
 
     return {
         "is_garment": True,
@@ -404,5 +389,6 @@ async def analyze(file: UploadFile = File(...)):
         "etat": etat,
         "confiance": round(conf_cat * 100, 1),
         "titre_suggere": titre.capitalize(),
-        "estimation_prix": prix_est
+        "filiere_recommandee": filiere,
+        "estimation_prix": prix if filiere == "revente" else None,
     }

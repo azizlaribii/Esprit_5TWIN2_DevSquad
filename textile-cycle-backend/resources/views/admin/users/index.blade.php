@@ -37,6 +37,7 @@
             </div>
         </div>
 
+
         <div class="card" style="padding:1.25rem">
             <div style="display:flex; justify-content:space-between; align-items:center">
                 <div>
@@ -94,8 +95,6 @@
                 <select name="role" class="form-control" onchange="this.form.submit()">
                     <option value="">Tous les rôles ({{ $stats['total'] }})</option>
                     <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>👑 Administrateurs ({{ $stats['admins'] }})</option>
-                    <option value="vendeur" {{ request('role') === 'vendeur' ? 'selected' : '' }}>🏷️ Vendeurs Marketplace ({{ $stats['vendeurs'] }})</option>
-                    <option value="acheteur" {{ request('role') === 'acheteur' ? 'selected' : '' }}>🛍️ Acheteurs Marketplace ({{ $stats['acheteurs'] }})</option>
                     <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>👤 Particuliers ({{ $stats['particuliers'] }})</option>
                     <option value="atelier" {{ request('role') === 'atelier' ? 'selected' : '' }}>✂️ Ateliers ({{ $stats['ateliers'] }})</option>
                     <option value="association" {{ request('role') === 'association' ? 'selected' : '' }}>🤝 Associations ({{ $stats['associations'] }})</option>

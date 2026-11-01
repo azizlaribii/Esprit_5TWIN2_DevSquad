@@ -11,6 +11,21 @@ class WorkshopController extends Controller
 {
     public function index(Request $request)
     {
+        // Synchroniser avec les ateliers de http://127.0.0.1:8000/ateliers
+        $ateliers = \App\Models\Atelier::all();
+        foreach ($ateliers as $a) {
+            Workshop::firstOrCreate(
+                ["name" => $a->nom],
+                [
+                    "address"     => $a->adresse,
+                    "city"        => str_contains($a->adresse, "Paris") ? "Paris" : (str_contains($a->adresse, "Lyon") ? "Lyon" : "Paris"),
+                    "phone"       => "+33 1 42 00 00 " . $a->id,
+                    "rating"      => $a->note ?? 4.9,
+                    "specialties" => ["Couture", "Trou", "Déchirure", "Fermeture cassée", "Bouton manquant", "Tache", "Usure", "Cuir", "Général"],
+                ]
+            );
+        }
+
         $query = Workshop::query();
 
         if ($request->filled('lat') && $request->filled('lng')) {

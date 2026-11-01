@@ -58,14 +58,14 @@
 
         <div class="grid-3">
             <div class="form-group">
-                <label class="form-label" for="type_projet">Type de projet *</label>
-                <select name="type_projet" id="type_projet" class="form-control @error('type_projet') is-invalid @enderror">
+                <label class="form-label" for="categorie_id">Catégorie *</label>
+                <select name="categorie_id" id="categorie_id" class="form-control @error('categorie_id') is-invalid @enderror">
                     <option value="">— Choisir —</option>
-                    @foreach(\App\Models\Transformation::TYPES as $type)
-                        <option value="{{ $type }}" @selected(old('type_projet', $t?->type_projet) === $type)>{{ $type }}</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" data-nom="{{ $cat->nom }}" @selected(old('categorie_id', $t?->categorie_id) == $cat->id)>{{ $cat->nom }}</option>
                     @endforeach
                 </select>
-                @error('type_projet')<div class="form-error">{{ $message }}</div>@enderror
+                @error('categorie_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="form-group">
@@ -212,8 +212,9 @@ function applyIdea(i) {
     document.getElementById('description').value = idea.description || '';
     document.getElementById('duree_estimee').value = idea.duree_estimee || '';
     document.getElementById('materiaux').value = (idea.materiaux || []).join(', ');
-    const type = document.getElementById('type_projet');
-    if ([...type.options].some(o => o.value === idea.type_projet)) type.value = idea.type_projet;
+    const cat = document.getElementById('categorie_id');
+    const match = [...cat.options].find(o => (o.dataset.nom || '').toLowerCase() === String(idea.type_projet || '').toLowerCase());
+    if (match) cat.value = match.value;
     const diff = document.getElementById('difficulte');
     if ([...diff.options].some(o => o.value === idea.difficulte)) diff.value = idea.difficulte;
     document.getElementById('genere_par_ia').value = 1;

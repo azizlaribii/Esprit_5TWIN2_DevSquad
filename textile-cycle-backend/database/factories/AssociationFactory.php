@@ -83,6 +83,7 @@ class AssociationFactory extends Factory
             'email'    => fake()->unique()->safeEmail(),
             'password' => $hash,
             'role'     => $role,
+            'email_verified_at' => now(),
         ])->id;
     }
 }

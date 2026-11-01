@@ -1,6 +1,6 @@
 @php
-    $etats = ['Très bon état', 'Bon état', 'A réparer', 'Usé'];
-    $statuts = ['en_attente' => 'En attente', 'valide' => 'Validé', 'traite' => 'Traité'];
+    $etats = ['Neuf avec étiquette', 'Très bon état', 'Bon état', 'État correct', 'A réparer', 'Usé'];
+    $statuts = \App\Models\Depot::STATUTS;
 @endphp
 
 {{-- Photo + analyse IA --}}
@@ -31,6 +31,8 @@
 <input type="hidden" name="ai_etat"      id="ai_etat"      value="{{ old('ai_etat', $depot->ai_etat ?? '') }}">
 <input type="hidden" name="ai_matiere"   id="ai_matiere"   value="{{ old('ai_matiere', $depot->ai_matiere ?? '') }}">
 <input type="hidden" name="ai_confiance" id="ai_confiance" value="{{ old('ai_confiance', $depot->ai_confiance ?? '') }}">
+<input type="hidden" name="ai_filiere"   id="ai_filiere"   value="{{ old('ai_filiere') }}">
+<input type="hidden" name="ai_prix"      id="ai_prix"      value="{{ old('ai_prix') }}">
 
 <div class="grid-2">
     <div class="form-group">
@@ -58,16 +60,16 @@
     @error('etat') <div class="form-error">{{ $message }}</div> @enderror
 </div>
 
-@isset($depot)
+@if(isset($depot) && auth()->user()->role === 'admin')
 <div class="form-group">
-    <label class="form-label">Statut</label>
+    <label class="form-label">Statut (administrateur)</label>
     <select name="statut" class="form-control">
         @foreach($statuts as $k => $v)
             <option value="{{ $k }}" @selected(old('statut', $depot->statut) === $k)>{{ $v }}</option>
         @endforeach
     </select>
 </div>
-@endisset
+@endif
 
 <div class="form-group">
     <label class="form-label">Description</label>
@@ -107,6 +109,11 @@ document.getElementById('btn-ia').addEventListener('click', async () => {
             return;
         }
 
+        if (data.is_garment === false) {
+            status.textContent = data.message || "Cette photo ne semble pas être un vêtement.";
+            return;
+        }
+
         document.getElementById('categorie').value = data.type;
         document.getElementById('etat').value = data.etat;
         const desc = document.getElementById('description');
@@ -119,9 +126,13 @@ document.getElementById('btn-ia').addEventListener('click', async () => {
         document.getElementById('ai_etat').value = data.etat;
         document.getElementById('ai_matiere').value = data.matiere;
         document.getElementById('ai_confiance').value = data.confiance;
+        document.getElementById('ai_filiere').value = data.filiere_recommandee || '';
+        document.getElementById('ai_prix').value = data.prix_revente ?? '';
 
         status.textContent = '';
-        box.innerHTML = `<strong>Résultat IA :</strong> ${data.type} · ${data.couleur} · ${data.matiere} · ${data.etat} (confiance ${data.confiance}%). Vous pouvez corriger les champs avant d'enregistrer.`;
+        box.innerHTML = `<strong>Résultat IA :</strong> ${data.type} · ${data.couleur} · ${data.matiere} · ${data.etat} (confiance ${data.confiance}%).<br>`
+            + `<strong>Recommandation :</strong> ${data.filiere_recommandee}${data.prix_revente ? ' · ' + data.prix_revente + ' DT estimés' : ''}. `
+            + `Vous pouvez corriger les champs avant d'enregistrer.`;
         box.style.display = 'block';
     } catch (e) {
         status.textContent = 'Service IA injoignable. Remplissez manuellement.';

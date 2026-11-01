@@ -15,14 +15,19 @@ class DepotAnalyzer
     public function analyze(UploadedFile $photo): ?array
     {
         try {
-            $response = Http::timeout(60)
+            $response = Http::timeout(120)
                 ->attach('file', file_get_contents($photo->getRealPath()), $photo->getClientOriginalName())
                 ->post(config('services.depot_ai.url') . '/analyze-depot');
 
             if ($response->failed()) {
-                return null;
+    Log::warning('DepotAnalyzer: réponse en erreur', [
+        'status' => $response->status(),
+        'body'   => $response->body(),
+    ]);
+    return null;
             }
-
+Log::info('DepotAnalyzer: réponse IA', $response->json() ?? []);
+return $response->json();
             return $response->json();
         } catch (\Throwable $e) {
             Log::warning('DepotAnalyzer indisponible : ' . $e->getMessage());

@@ -337,16 +337,35 @@ function toggleFilter(s, on) {
 }
 
 /* ── Load & render ── */
+function getWorkshopSpecs(w) {
+    if (!w) return [];
+    if (Array.isArray(w.specialties)) return w.specialties;
+    if (typeof w.specialties === 'string') {
+        try {
+            const p = JSON.parse(w.specialties);
+            return Array.isArray(p) ? p : [w.specialties];
+        } catch {
+            return [w.specialties];
+        }
+    }
+    return [];
+}
+
 async function loadWorkshops() {
-    // Charger TOUS les ateliers pour que chaque réparation les voie tous
-    let url = `/api/workshops`;
-    if (userLat && userLng) url += `?lat=${userLat}&lng=${userLng}`;
+    let url = '/api/workshops';
+    if (userLat && userLng) url += '?lat=' + userLat + '&lng=' + userLng;
     try {
-        const r = await fetch(url);
+        const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!r.ok) {
+            console.error('Erreur API ateliers:', r.status, r.statusText);
+            return;
+        }
         const j = await r.json();
         allWorkshops = j.data || [];
         renderWorkshops();
-    } catch { console.error('Erreur chargement ateliers'); }
+    } catch (e) {
+        console.error('Erreur chargement ateliers', e);
+    }
 }
 
 function renderWorkshops() {
@@ -400,21 +419,21 @@ function renderWorkshops() {
             <div style="display:flex;flex-direction:column;gap:.4rem;align-items:flex-end">
                 <!-- Confier (bouton principal) -->
                 <button class="btn ${isAssigned ? 'btn-secondary' : 'btn-primary'}" style="min-width:190px;justify-content:center"
-                        onclick="chooseWorkshop(${w.id},'${w.name.replace(/'/g,"\\'").replace(/"/g,'\\"')}')">
+                        onclick="chooseWorkshop(${w.id})">
                     <span class="material-icons-round">${isAssigned ? 'check' : 'handshake'}</span>
                     ${isAssigned ? 'Déjà sélectionné' : 'Confier à cet atelier'}
                 </button>
 
                 <!-- Actions secondaires -->
                 <div class="action-row">
-                    <button class="btn btn-secondary btn-sm" onclick='openVoir(${JSON.stringify(w)})' title="Voir les détails">
+                    <button class="btn btn-secondary btn-sm" onclick="openVoir(${w.id})" title="Voir les détails">
                         <span class="material-icons-round" style="font-size:1rem">visibility</span> Voir
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick='openEdit(${JSON.stringify(w)})' title="Modifier l'atelier"
+                    <button class="btn btn-secondary btn-sm" onclick="openEdit(${w.id})" title="Modifier l'atelier"
                             style="color:var(--accent-orange);border-color:rgba(255,167,38,.35)">
                         <span class="material-icons-round" style="font-size:1rem">edit</span> Modifier
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick='openDelete(${w.id},"${w.name.replace(/"/g,'\\"')}")'
+                    <button class="btn btn-secondary btn-sm" onclick="openDelete(${w.id})"
                             title="Supprimer l'atelier"
                             style="color:var(--accent-red);border-color:rgba(255,101,132,.35)">
                         <span class="material-icons-round" style="font-size:1rem">delete</span> Supprimer
@@ -428,7 +447,8 @@ function renderWorkshops() {
 /* ─────────────────────────────────────
    MODAL VOIR
 ───────────────────────────────────── */
-function openVoir(w) {
+function openVoir(target) {
+    const w = (typeof target === 'object' && target !== null) ? target : (allWorkshops.find(item => item.id === target) || {});
     document.getElementById('voirName').textContent = w.name;
     const specs = Array.isArray(w.specialties) ? w.specialties : [];
 
@@ -470,7 +490,8 @@ function openVoir(w) {
 /* ─────────────────────────────────────
    MODAL MODIFIER
 ───────────────────────────────────── */
-function openEdit(w) {
+function openEdit(target) {
+    const w = (typeof target === 'object' && target !== null) ? target : (allWorkshops.find(item => item.id === target) || {});
     document.getElementById('editId').value      = w.id;
     document.getElementById('editName').value    = w.name;
     document.getElementById('editAddress').value = w.address || '';
@@ -548,6 +569,7 @@ async function saveEdit() {
    MODAL SUPPRIMER
 ───────────────────────────────────── */
 function openDelete(id, name) {
+    if (!name) { const w = allWorkshops.find(item => item.id === id); name = w ? w.name : ''; }
     document.getElementById('deleteId').value  = id;
     document.getElementById('deleteName').textContent = name;
     openModal('modalDelete');
@@ -578,6 +600,7 @@ async function confirmDelete() {
    CONFIER À UN ATELIER
 ───────────────────────────────────── */
 async function chooseWorkshop(workshopId, workshopName) {
+    if (!workshopName) { const w = allWorkshops.find(item => item.id === workshopId); workshopName = w ? w.name : 'cet atelier'; }
     if (!confirm(`Confier la réparation à "${workshopName}" ?`)) return;
     try {
         const res = await fetch(`/api/repairs/${REPAIR_ID}/workshop`, {

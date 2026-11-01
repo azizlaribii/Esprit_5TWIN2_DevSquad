@@ -17,7 +17,7 @@ class TransformationRequest extends FormRequest
     {
         return [
             'titre'         => ['required', 'string', 'min:3', 'max:120'],
-            'type_projet'   => ['required', Rule::in(Transformation::TYPES)],
+            'categorie_id'  => ['required', 'integer', Rule::exists('categories_upcycling', 'id')->where('actif', true)],
             'statut'        => ['required', Rule::in(array_keys(Transformation::STATUTS))],
             // Le dépôt doit appartenir à l'utilisateur connecté
             'depot_id'      => ['nullable', 'integer', Rule::exists('depots', 'id')->where('user_id', $this->user()->id)],
@@ -35,7 +35,7 @@ class TransformationRequest extends FormRequest
             'min'      => 'Le champ :attribute doit contenir au moins :min caractères.',
             'max'      => 'Le champ :attribute ne doit pas dépasser :max caractères.',
             'in'       => 'La valeur choisie pour :attribute est invalide.',
-            'exists'   => 'Le vêtement sélectionné est introuvable.',
+            'exists'   => 'La valeur sélectionnée pour :attribute est introuvable.',
         ];
     }
 
@@ -43,7 +43,7 @@ class TransformationRequest extends FormRequest
     {
         return [
             'titre'         => 'titre',
-            'type_projet'   => 'type de projet',
+            'categorie_id'  => 'catégorie',
             'statut'        => 'statut',
             'depot_id'      => 'vêtement',
             'description'   => 'description',

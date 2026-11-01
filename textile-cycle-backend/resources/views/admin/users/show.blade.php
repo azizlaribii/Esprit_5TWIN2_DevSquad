@@ -46,10 +46,6 @@
                     <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-primary); margin:0">{{ $user->name }}</h2>
                     @if($user->role === 'admin')
                         <span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FCD34D">👑 Administrateur</span>
-                    @elseif($user->role === 'vendeur')
-                        <span class="badge" style="background:#F5F3FF; color:#6D28D9; border:1px solid #DDD6FE">🏷️ Vendeur</span>
-                    @elseif($user->role === 'acheteur')
-                        <span class="badge" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE">🛍️ Acheteur</span>
                     @elseif($user->role === 'atelier')
                         <span class="badge" style="background:#E0F2FE; color:#0369A1; border:1px solid #BAE6FD">✂️ Atelier</span>
                     @elseif($user->role === 'association')

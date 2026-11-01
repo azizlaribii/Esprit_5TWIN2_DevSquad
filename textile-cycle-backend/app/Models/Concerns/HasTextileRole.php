@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  *     use App\Models\Concerns\HasTextileRole;
  *     class User extends Authenticatable { use HasTextileRole; ... }
  *
- * (la colonne `role` existe déjà : user, atelier, association, admin).
+ * (les 4 rôles : admin, atelier, association, user/particulier).
  */
 trait HasTextileRole
 {
@@ -22,15 +22,20 @@ trait HasTextileRole
         return $this->role === 'admin';
     }
 
+    public function isAtelier(): bool
+    {
+        return $this->role === 'atelier';
+    }
+
     public function isAssociation(): bool
     {
         return $this->role === 'association';
     }
 
-    /** Le « particulier » (donateur) correspond au rôle « user » du projet. */
+    /** Le « particulier » (donateur/client) correspond au rôle « user » du projet. */
     public function isParticulier(): bool
     {
-        return $this->role === 'user';
+        return $this->role === 'user' || $this->role === 'particulier';
     }
 
     public function donations(): HasMany
