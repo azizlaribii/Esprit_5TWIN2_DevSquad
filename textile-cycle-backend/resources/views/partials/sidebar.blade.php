@@ -18,6 +18,10 @@
                 <span class="nav-label">Gestion Utilisateurs</span>
                 <span class="nav-badge" style="background:var(--primary)">Admin</span>
             </a>
+                        <a href="/upcycling/admin/categories" class="nav-item {{ request()->is('upcycling/admin*') ? 'active' : '' }}">
+                <span class="nav-icon material-icons-round">category</span>
+                <span class="nav-label">Catégories Upcycling</span>
+            </a>
 
 
             <a href="{{ route('admin.depots.index') }}" class="nav-item {{ request()->is('admin/depots*') ? 'active' : '' }}">

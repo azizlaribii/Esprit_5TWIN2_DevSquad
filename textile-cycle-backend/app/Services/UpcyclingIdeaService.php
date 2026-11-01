@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CategorieUpcycling;
 use App\Models\Transformation;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,18 @@ use Throwable;
  */
 class UpcyclingIdeaService
 {
+    /** Noms des catégories actives (repli sur la liste par défaut si la base est vide). */
+    protected function types(): array
+    {
+        try {
+            $names = CategorieUpcycling::actives()->orderBy('nom')->pluck('nom')->all();
+        } catch (Throwable $e) {
+            $names = [];
+        }
+
+        return $names ?: Transformation::TYPES;
+    }
+
     public function enabled(): bool
     {
         return filled(config('textilecycle.ai.key'));
@@ -45,7 +58,7 @@ class UpcyclingIdeaService
         $system = 'Tu es un expert en upcycling textile. Tu réponds UNIQUEMENT par un objet JSON, sans texte autour, '
             . 'de la forme {"ideas":[{"titre":"","type_projet":"","description":"","difficulte":"","duree_estimee":"","materiaux":[""]}]}. '
             . 'Donne exactement 3 idées réalistes, en français. '
-            . 'type_projet doit être parmi : ' . implode(', ', Transformation::TYPES) . '. '
+            . 'type_projet doit être parmi : ' . implode(', ', $this->types()) . '. '
             . 'difficulte doit être parmi : facile, moyen, avance. '
             . 'description : 2 phrases maximum.';
 
@@ -94,7 +107,7 @@ class UpcyclingIdeaService
             ->take(3)
             ->map(fn (array $i) => [
                 'titre'         => mb_substr((string) $i['titre'], 0, 120),
-                'type_projet'   => in_array($i['type_projet'] ?? null, Transformation::TYPES, true) ? $i['type_projet'] : 'Autre',
+                'type_projet'   => in_array($i['type_projet'] ?? null, $this->types(), true) ? $i['type_projet'] : 'Autre',
                 'description'   => mb_substr((string) ($i['description'] ?? ''), 0, 600),
                 'difficulte'    => array_key_exists($i['difficulte'] ?? '', Transformation::DIFFICULTES) ? $i['difficulte'] : 'moyen',
                 'duree_estimee' => mb_substr((string) ($i['duree_estimee'] ?? ''), 0, 50),
