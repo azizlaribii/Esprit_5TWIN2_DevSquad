@@ -12,7 +12,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\ProfileController;
-
+use App\Http\Controllers\ValorisationController;
 /*
 |--------------------------------------------------------------------------
 | Routes Web â€“ TexTileCycle
@@ -27,8 +27,6 @@ use App\Http\Controllers\Auth\ProfileController;
 Route::middleware('guest')->group(function () {
     Route::post('/login', [\Laravel\Fortify\Http\Controllers\AuthenticatedSessionController::class, 'store'])->name('login.post');
     Route::post('/register', [\Laravel\Fortify\Http\Controllers\RegisteredUserController::class, 'store'])->name('register.post');
-
-
 
 
     // Reset mot de passe
@@ -80,6 +78,7 @@ Route::middleware(['auth', 'verified', '2fa'])->group(function () {
     // Gestion du circuit textile
     Route::post('depots/analyser', [DepotController::class, 'analyser'])->name('depots.analyser');
     Route::resource('depots', DepotController::class);
+    Route::resource('valorisations', ValorisationController::class);
     Route::get('/reparations',   [DashboardViewController::class, 'reparations'])->name('reparations.index');
     Route::get('/dons',          [DashboardViewController::class, 'dons'])->name('dons.index');
 
