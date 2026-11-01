@@ -15,7 +15,7 @@ class DepotAnalyzer
     public function analyze(UploadedFile $photo): ?array
     {
         try {
-            $response = Http::timeout(60)
+            $response = Http::timeout(120)
                 ->attach('file', file_get_contents($photo->getRealPath()), $photo->getClientOriginalName())
                 ->post(config('services.depot_ai.url') . '/analyze-depot');
 

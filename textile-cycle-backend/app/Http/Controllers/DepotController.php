@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Depot;
 use App\Services\DepotAnalyzer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class DepotController extends Controller
 {
-    private const ETATS = ['Très bon état', 'Bon état', 'A réparer', 'Usé'];
-    private const STATUTS = ['en_attente', 'valide', 'traite'];
+    private const ETATS = ['Neuf avec étiquette', 'Très bon état', 'Bon état', 'État correct', 'A réparer', 'Usé'];
 
     private function rules(): array
     {
@@ -18,7 +18,7 @@ class DepotController extends Controller
             'categorie'    => 'required|string|min:3|max:100',
             'quantite'     => 'required|integer|min:1|max:1000',
             'etat'         => ['required', Rule::in(self::ETATS)],
-            'statut'       => ['nullable', Rule::in(self::STATUTS)],
+            'statut'       => ['nullable', Rule::in(array_keys(Depot::STATUTS))],
             'description'  => 'nullable|string|max:1000',
             'photo'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'ai_type'      => 'nullable|string|max:100',
@@ -44,44 +44,43 @@ class DepotController extends Controller
         ];
     }
 
-public function index(Request $request)
-{
-    $query = Depot::with('user');
-
-    // Recherche texte : catégorie, description, nom du déposant
-    if ($request->filled('q')) {
-        $q = $request->q;
-        $query->where(function ($sub) use ($q) {
-            $sub->where('categorie', 'like', "%{$q}%")
-                ->orWhere('description', 'like', "%{$q}%")
-                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%"));
-        });
+    private function autoriser(Depot $depot): void
+    {
+        abort_unless($depot->estGerablePar(auth()->user()), 403);
     }
 
-    if ($request->filled('etat')) {
-        $query->where('etat', $request->etat);
+    public function index(Request $request)
+    {
+        $query = Depot::with('user')->withCount('valorisations');
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('categorie', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+            });
+        }
+        if ($request->filled('etat')) {
+            $query->where('etat', $request->etat);
+        }
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+        if ($request->filled('categorie')) {
+            $query->where('categorie', $request->categorie);
+        }
+
+        $categories = Depot::select('categorie')->distinct()->orderBy('categorie')->pluck('categorie');
+        $depots = $query->latest()->paginate(10)->withQueryString();
+
+        return view('depots.index', [
+            'depots'     => $depots,
+            'categories' => $categories,
+            'etats'      => self::ETATS,
+            'statuts'    => Depot::STATUTS,
+        ]);
     }
-
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
-    }
-
-    if ($request->filled('categorie')) {
-        $query->where('categorie', $request->categorie);
-    }
-
-    // Liste des catégories existantes pour le menu déroulant
-    $categories = Depot::select('categorie')->distinct()->orderBy('categorie')->pluck('categorie');
-
-    $depots = $query->latest()->paginate(10)->withQueryString();
-
-    return view('depots.index', [
-        'depots'     => $depots,
-        'categories' => $categories,
-        'etats'      => self::ETATS,
-        'statuts'    => ['en_attente' => 'En attente', 'valide' => 'Validé', 'traite' => 'Traité'],
-    ]);
-}
 
     public function create()
     {
@@ -108,35 +107,61 @@ public function index(Request $request)
 
     public function store(Request $request)
     {
+        $request->validate([
+            'ai_filiere' => 'nullable|in:revente,reparation,don,recyclage',
+            'ai_prix'    => 'nullable|numeric|min:0',
+        ]);
+
         $data = $request->validate($this->rules(), $this->messages());
         $data['user_id'] = auth()->id();
-        $data['statut']  = $data['statut'] ?? 'en_attente';
+        $data['statut']  = 'en_attente'; // seul l'admin change le statut
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('depots', 'public');
         }
 
-        Depot::create($data);
+        $depot = Depot::create($data);
+
+        if ($request->filled('ai_filiere')) {
+            $depot->valorisations()->create([
+                'filiere'         => $request->ai_filiere,
+                'statut'          => 'propose',
+                'estimation_prix' => $request->filled('ai_prix') ? $request->ai_prix : null,
+                'commentaire'     => "Proposition automatique de l'IA ({$depot->ai_type}, {$depot->ai_etat}).",
+                'source'          => 'ia',
+            ]);
+        }
 
         return redirect()->route('depots.index')->with('success', 'Dépôt ajouté avec succès.');
     }
 
     public function show(Depot $depot)
     {
-        $depot->load('user');
+        $depot->load('user', 'valorisations');
         return view('depots.show', compact('depot'));
     }
 
     public function edit(Depot $depot)
     {
+        $this->autoriser($depot);
         return view('depots.edit', compact('depot'));
     }
 
     public function update(Request $request, Depot $depot)
     {
+        $this->autoriser($depot);
+
         $data = $request->validate($this->rules(), $this->messages());
 
+        // Un utilisateur ne peut pas valider son propre dépôt
+        if (auth()->user()->role !== 'admin') {
+            unset($data['statut']);
+        }
+
         if ($request->hasFile('photo')) {
+            if ($depot->photo) {
+                Storage::disk('public')->delete($depot->photo);
+            }
             $data['photo'] = $request->file('photo')->store('depots', 'public');
         }
 
@@ -147,7 +172,13 @@ public function index(Request $request)
 
     public function destroy(Depot $depot)
     {
+        $this->autoriser($depot);
+
+        if ($depot->photo) {
+            Storage::disk('public')->delete($depot->photo);
+        }
         $depot->delete();
+
         return redirect()->route('depots.index')->with('success', 'Dépôt supprimé.');
     }
 }
