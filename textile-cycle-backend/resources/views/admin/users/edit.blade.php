@@ -50,12 +50,10 @@
             <div class="form-group">
                 <label class="form-label" for="role">Rôle sur la plateforme <span style="color:var(--accent-red)">*</span></label>
                 <select name="role" id="role" required class="form-control">
-                    <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>👤 Particulier (Standard)</option>
-                    <option value="vendeur" {{ old('role', $user->role) === 'vendeur' ? 'selected' : '' }}>🏷️ Vendeur Marketplace</option>
-                    <option value="acheteur" {{ old('role', $user->role) === 'acheteur' ? 'selected' : '' }}>🛍️ Acheteur Marketplace</option>
-                    <option value="atelier" {{ old('role', $user->role) === 'atelier' ? 'selected' : '' }}>✂️ Atelier de réparation / Upcycling</option>
-                    <option value="association" {{ old('role', $user->role) === 'association' ? 'selected' : '' }}>🤝 Association bénéficiaire</option>
-                    <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>👑 Administrateur général</option>
+                    <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>👑 Administrateur</option>
+                    <option value="atelier" {{ old('role', $user->role) === 'atelier' ? 'selected' : '' }}>✂️ Atelier</option>
+                    <option value="association" {{ old('role', $user->role) === 'association' ? 'selected' : '' }}>🤝 Association</option>
+                    <option value="user" {{ in_array(old('role', $user->role), ['user', 'particulier', 'vendeur', 'acheteur']) ? 'selected' : '' }}>👤 Particulier</option>
                 </select>
             </div>
 
@@ -96,4 +94,3 @@
 
 </div>
 @endsection
-

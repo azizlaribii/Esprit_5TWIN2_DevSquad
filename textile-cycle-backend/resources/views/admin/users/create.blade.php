@@ -11,7 +11,7 @@
             <span>Retour à la liste des utilisateurs</span>
         </a>
         <h1 class="page-title">Créer un nouvel utilisateur</h1>
-        <p class="page-subtitle">Ajoutez manuellement un administrateur, particulier, atelier ou association.</p>
+        <p class="page-subtitle">Ajoutez manuellement un administrateur, atelier, association ou particulier.</p>
     </div>
 
     @if ($errors->any())
@@ -49,12 +49,10 @@
             <div class="form-group">
                 <label class="form-label" for="role">Rôle sur la plateforme <span style="color:var(--accent-red)">*</span></label>
                 <select name="role" id="role" required class="form-control">
-                    <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>👤 Particulier (Standard)</option>
-                    <option value="vendeur" {{ old('role') === 'vendeur' ? 'selected' : '' }}>🏷️ Vendeur Marketplace</option>
-                    <option value="acheteur" {{ old('role') === 'acheteur' ? 'selected' : '' }}>🛍️ Acheteur Marketplace</option>
-                    <option value="atelier" {{ old('role') === 'atelier' ? 'selected' : '' }}>✂️ Atelier de réparation / Upcycling</option>
-                    <option value="association" {{ old('role') === 'association' ? 'selected' : '' }}>🤝 Association bénéficiaire</option>
-                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>👑 Administrateur général</option>
+                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>👑 Administrateur</option>
+                    <option value="atelier" {{ old('role') === 'atelier' ? 'selected' : '' }}>✂️ Atelier</option>
+                    <option value="association" {{ old('role') === 'association' ? 'selected' : '' }}>🤝 Association</option>
+                    <option value="user" {{ old('role', 'user') === 'user' ? 'selected' : '' }}>👤 Particulier</option>
                 </select>
                 <small style="color:var(--text-muted); font-size:.8rem; margin-top:.35rem; display:block">
                     Le rôle détermine les permissions d'accès et les fonctionnalités disponibles.
@@ -89,4 +87,3 @@
 
 </div>
 @endsection
-

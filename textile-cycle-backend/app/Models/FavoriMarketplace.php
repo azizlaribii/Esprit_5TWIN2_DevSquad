@@ -1,4 +1,3 @@
-```php
 <?php
 
 namespace App\Models;
@@ -27,4 +26,3 @@ class FavoriMarketplace extends Model
         return $this->belongsTo(ArticleMarketplace::class, 'article_id');
     }
 }
-```

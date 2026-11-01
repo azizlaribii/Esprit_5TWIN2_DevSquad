@@ -146,6 +146,19 @@ class DashboardViewController extends Controller
      */
     public function ateliers()
     {
+        // Synchroniser avec les ateliers
+        $workshops = \App\Models\Workshop::all();
+        foreach ($workshops as $w) {
+            Atelier::firstOrCreate(
+                ["nom" => $w->name],
+                [
+                    "adresse" => $w->address . ($w->city && !str_contains($w->address, $w->city) ? ", " . $w->city : ""),
+                    "specialite" => is_array($w->specialties) ? implode(" & ", array_slice($w->specialties, 0, 2)) : ($w->specialties ?? "Couture"),
+                    "note" => $w->rating ?? 5.0,
+                ]
+            );
+        }
+
         $ateliers = Atelier::orderByDesc('note')->get();
         return view('pages.ateliers', compact('ateliers'));
     }

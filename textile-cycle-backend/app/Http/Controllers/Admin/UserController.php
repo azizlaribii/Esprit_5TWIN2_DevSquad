@@ -26,9 +26,13 @@ class UserController extends Controller
             });
         }
 
-        // Filtre par rôle
+        // Filtre par rôle (4 rôles principaux : admin, atelier, association, particulier/user)
         if ($role = $request->input('role')) {
-            $query->where('role', $role);
+            if ($role === 'particulier' || $role === 'user') {
+                $query->whereIn('role', ['user', 'particulier']);
+            } else {
+                $query->where('role', $role);
+            }
         }
 
         // Filtre par statut 2FA
@@ -46,11 +50,11 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(12)->withQueryString();
 
-        // Statistiques pour les badges du haut
+        // Statistiques pour les badges et cartes
         $stats = [
             'total'        => User::count(),
             'admins'       => User::where('role', 'admin')->count(),
-            'particuliers' => User::where('role', 'user')->count(),
+            'particuliers' => User::whereIn('role', ['user', 'particulier'])->count(),
             'vendeurs'     => User::where('role', 'vendeur')->count(),
             'acheteurs'    => User::where('role', 'acheteur')->count(),
             'ateliers'     => User::where('role', 'atelier')->count(),
@@ -77,7 +81,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role'     => ['required', 'string', Rule::in(['admin', 'user', 'vendeur', 'acheteur', 'atelier', 'association'])],
+            'role'     => ['required', 'string', Rule::in(['admin', 'atelier', 'association', 'user', 'particulier'])],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'name.required'      => 'Le nom est obligatoire.',
@@ -90,10 +94,12 @@ class UserController extends Controller
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
+        $role = ($validated['role'] === 'particulier') ? 'user' : $validated['role'];
+
         $user = User::create([
             'name'              => $validated['name'],
             'email'             => $validated['email'],
-            'role'              => $validated['role'],
+            'role'              => $role,
             'password'          => Hash::make($validated['password']),
             'email_verified_at' => now(),
         ]);
@@ -107,7 +113,6 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        // Charger les relations et statistiques de l'utilisateur
         $counts = [
             'depots'       => $user->depots()->count(),
             'articles'     => $user->articlesMarketplace()->count(),
@@ -134,7 +139,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role'     => ['required', 'string', Rule::in(['admin', 'user', 'vendeur', 'acheteur', 'atelier', 'association'])],
+            'role'     => ['required', 'string', Rule::in(['admin', 'atelier', 'association', 'user', 'particulier'])],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ], [
             'name.required'      => 'Le nom est obligatoire.',
@@ -146,10 +151,12 @@ class UserController extends Controller
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
+        $role = ($validated['role'] === 'particulier') ? 'user' : $validated['role'];
+
         $data = [
             'name'  => $validated['name'],
             'email' => $validated['email'],
-            'role'  => $validated['role'],
+            'role'  => $role,
         ];
 
         if (!empty($validated['password'])) {
@@ -188,4 +195,3 @@ class UserController extends Controller
         return back()->with('success', "La double authentification (2FA) de « {$user->name} » a été réinitialisée.");
     }
 }
-

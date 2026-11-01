@@ -1,4 +1,3 @@
-```php
 <?php
 
 namespace App\Models;
@@ -29,4 +28,3 @@ class DemandeMarketplace extends Model
         return $this->belongsTo(User::class, 'acheteur_id');
     }
 }
-```
